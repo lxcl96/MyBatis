@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<!--    配置连接数据库的环境-->
+    <environments default="development">
+        <environment id="development">
+            <!-- 设置事务管理器类型为jdbc，最原始的事务管理方式：事务提交/回滚等需要手动提交-->
+            <transactionManager type="JDBC"/>
+            <!-- 数据库连接，POLLED表示使用数据库连接池。将数据库连接保存下来，以便下次直接从缓存中取出-->
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql:///mybatis"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+<!--    引入映射文件-->
+    <mappers>
+        <mapper resource="mappers/UserMapper.xml"/>
+    </mappers>
+</configuration>

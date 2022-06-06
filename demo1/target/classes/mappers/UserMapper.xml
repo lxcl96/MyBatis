@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名-->
+<mapper namespace="com.ly.mybatis.mapper.UserMapper">
+    <!-- id为接口的某个函数名，一一对应-->
+    <insert id="insertUser" >
+        insert t_user values (null ,'admin','123456',23,'男','123456@qq.com');
+    </insert>
+
+    <update id="updateUser" >
+        update t_user set sex='女';
+    </update>
+
+    <delete id="deleteUser">
+        delete from t_user where id = 12;
+    </delete>
+</mapper>
