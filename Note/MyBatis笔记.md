@@ -88,14 +88,53 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 ## 创建mapper接口
 >MyBatis中的mapper接口相当于以前的dao。但是区别在于，mapper仅仅是接口，我们不需要提供实现类
 ```java
-package com.atguigu.mybatis.mapper;  
-  
-public interface UserMapper {  
-	/**  
-	* 添加用户信息  
-	*/  
-	int insertUser();  
+package com.ly.mybatis.mapper;
+
+import com.ly.mybatis.pojo.User;
+
+import java.util.List;
+
+/**
+ * @FileName:UserMapper.class
+ * @Author:ly
+ * @Date:2022/6/6
+ * @Description:
+ */
+//MyBatis面向接口编程的的两个一致：
+//1、映射文件（如UserMapper.xml）中的mapper标签的属性namespace的值必须为要使用接口的全类名
+//2、映射文件中sql语句的id值，要和要实现接口的方法的方法名对应（保证一一对应）
+public interface UserMapper {
+
+    /**
+     * 添加用户信息
+     * @return 影响的行数
+     */
+    int insertUser();
+
+    /**
+     * 修改用户信息
+     * @return 返回影响行数
+     */
+    int updateUser();
+
+    /**
+     * 删除用户
+     * @return 影响的行数
+     */
+    int deleteUser();
+
+
+    /***
+     * 查询一个实体类对象
+     */
+    User selectOneBean();
+
+    /**
+     * 查询所有用户数据
+     */
+    List<User> getAllUser();
 }
+
 ```
 ## 创建MyBatis的映射文件
 - 相关概念：ORM（Object Relationship Mapping）对象关系映射。  
@@ -119,15 +158,42 @@ public interface UserMapper {
 	- mapper接口的全类名和映射文件的命名空间（namespace）保持一致
 	- mapper接口中方法的方法名和映射文件中编写SQL的标签的id属性保持一致
 ```xml
-<?xml version="1.0" encoding="UTF-8" ?>  
-<!DOCTYPE mapper  
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
-<mapper namespace="com.atguigu.mybatis.mapper.UserMapper">  
-	<!--int insertUser();-->  
-	<insert id="insertUser">  
-		insert into t_user values(null,'张三','123',23,'女')  
-	</insert>  
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名 必须为全类名，不能省略，不要因为按包导入就不一样了，又不是起别名-->
+<mapper namespace="ParameterMapper">
+<!-- id为接口的某个函数名，一一对应-->
+    <insert id="insertUser" >
+        insert t_user values (null ,'admin','123456',23,'男','123456@qq.com');
+    </insert>
+
+    <update id="updateUser" >
+        update t_user set sex='女';
+    </update>
+
+    <delete id="deleteUser">
+        delete from t_user where id = 12;
+    </delete>
+
+    <!-- 查询功能必须设置resulType/resultMap 表示结果类型，mybatis会将查询到的结果转化成这个类型，然后再转化为对应函数selectOneBean()的返回值返回
+        resultType（结果类型）：全类名（设置默认的映射关系，属性名一致则赋值否则不赋值） 【用于一行多列，或多行多列,或单行单列，或多行单列】
+        resultMap（结果映射）：（设置自定义的映射关系，即sql字段名和java属性名不一致时） 【用于一行多列，或多行多列,或单行单列，或多行单列】
+    -->
+    <select id="selectOneBean" resultType="com.ly.mybatis.pojo.User">
+        select username  from t_user where id=13;
+    </select>
+
+
+<!--    <select id="getAllUser" resultType="com.ly.mybatis.pojo.User">-->
+    <!-- 使用mybatis配置文件中 配置的全类名的 别名User（不区分大小写）-->
+    <select id="getAllUser" resultType="User">
+        select username from t_user;
+    </select>
+
+
 </mapper>
 ```
 ## 通过junit测试功能
@@ -135,28 +201,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 - SqlSessionFactory：是“生产”SqlSession的“工厂”
 - 工厂模式：如果创建某一个对象，使用的过程基本固定，那么我们就可以把创建这个对象的相关代码封装到一个“工厂类”中，以后都使用这个工厂类来“生产”我们需要的对象
 ```java
-public class UserMapperTest {
-    @Test
-    public void testInsertUser() throws IOException {
-        //读取MyBatis的核心配置文件
+ 	@Test
+    public void testMyBatis() throws IOException {
+        //1、加载核心配置文件 即mybatis-config.xml
         InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
-        //获取SqlSessionFactoryBuilder对象
-        SqlSessionFactoryBuilder sqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
-        //通过核心配置文件所对应的字节输入流创建工厂类SqlSessionFactory，生产SqlSession对象
-        SqlSessionFactory sqlSessionFactory = sqlSessionFactoryBuilder.build(is);
-        //获取sqlSession，此时通过SqlSession对象所操作的sql都必须手动提交或回滚事务
-        //SqlSession sqlSession = sqlSessionFactory.openSession();
-	    //创建SqlSession对象，此时通过SqlSession对象所操作的sql都会自动提交  
-		SqlSession sqlSession = sqlSessionFactory.openSession(true);
-        //通过代理模式创建UserMapper接口的代理实现类对象
+        //2、获取SqlSessionFactoryBuilder对象
+        SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+        //3、获取SqlSessionFactory对象
+        SqlSessionFactory sqlSessionFactory = builder.build(is);
+        //4、获取SqlSession对象   其为操作数据库的会话对象 【事务默认手动提交，设置为true 则自动提交】
+        SqlSession sqlSession = sqlSessionFactory.openSession(true);
+        //5、获取mapper接口对象 【底层代理模式，返回接口的实现类对象】
         UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
-        //调用UserMapper接口中的方法，就可以根据UserMapper的全类名匹配元素文件，通过调用的方法名匹配映射文件中的SQL标签，并执行标签中的SQL语句
-        int result = userMapper.insertUser();
-        //提交事务
+        //6、执行sql语句
+        int i = userMapper.insertUser();
+        System.out.println("受影响的行数为：" + i);
+        //7、因为mybatis全局配置文件，默认开启事务          <transactionManager type="JDBC"/>
         //sqlSession.commit();
-        System.out.println("result:" + result);
     }
-}
 ```
 - 此时需要手动提交事务，如果要自动提交事务，则在获取sqlSession对象时，使用`SqlSession sqlSession = sqlSessionFactory.openSession(true);`，传入一个Boolean类型的参数，值为true，这样就可以自动提交
 ## 加入log4j日志功能
@@ -195,85 +257,79 @@ public class UserMapperTest {
 	</log4j:configuration>
 	```
 # 核心配置文件详解
+
+参考手册：[mybatis – MyBatis 3 | 配置](https://mybatis.org/mybatis-3/zh/configuration.html#environments)
+
 >核心配置文件中的标签必须按照固定的顺序(有的标签可以不写，但顺序一定不能乱)：
 properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapperFactory、reflectorFactory、plugins、environments、databaseIdProvider、mappers
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
+<!-- 声明文件根标签-->
 <!DOCTYPE configuration
-        PUBLIC "-//MyBatis.org//DTD Config 3.0//EN"
-        "http://MyBatis.org/dtd/MyBatis-3-config.dtd">
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
 <configuration>
-    <!--引入properties文件，此时就可以${属性名}的方式访问属性值-->
-    <properties resource="jdbc.properties"></properties>
-    <settings>
-        <!--将表中字段的下划线自动转换为驼峰-->
-        <setting name="mapUnderscoreToCamelCase" value="true"/>
-        <!--开启延迟加载-->
-        <setting name="lazyLoadingEnabled" value="true"/>
-    </settings>
+
+    <!--引入数据源配置文件 方便下面使用 -->
+    <properties resource="jdbc.properties" />
+
+    <!-- 设置类型的别名，不然mapper.xml文件中全类名太长   （不区分大小写）
+        如果不写属性alias指定别名，则别名就默认是类名User（不区分大小写）-->
     <typeAliases>
-        <!--
-        typeAlias：设置某个具体的类型的别名
-        属性：
-        type：需要设置别名的类型的全类名
-        alias：设置此类型的别名，且别名不区分大小写。若不设置此属性，该类型拥有默认的别名，即类名
-        -->
-        <!--<typeAlias type="com.atguigu.mybatis.bean.User"></typeAlias>-->
-        <!--<typeAlias type="com.atguigu.mybatis.bean.User" alias="user">
-        </typeAlias>-->
-        <!--以包为单位，设置改包下所有的类型都拥有默认的别名，即类名且不区分大小写-->
-        <package name="com.atguigu.mybatis.bean"/>
+        <!--指定某一类的别名-->
+        <typeAlias type="com.ly.mybatis.pojo.User" alias="User"/>
+
+        <!-- 指定某个包下，所有类的的别名 默认为类名（不区分大小写）-->
+        <package name="com.ly.mybatis.pojo"/>
     </typeAliases>
-    <!--
-    environments：设置多个连接数据库的环境
-    属性：
-	    default：设置默认使用的环境的id
-    -->
-    <environments default="mysql_test">
-        <!--
-        environment：设置具体的连接数据库的环境信息
-        属性：
-	        id：设置环境的唯一标识，可通过environments标签中的default设置某一个环境的id，表示默认使用的环境
+<!--    配置连接数据库的环境，可配置多个
+        属性default：表示当前使用哪个数据库配置的id（development/test）
         -->
-        <environment id="mysql_test">
-            <!--
-            transactionManager：设置事务管理方式
-            属性：
-	            type：设置事务管理方式，type="JDBC|MANAGED"
-	            type="JDBC"：设置当前环境的事务管理都必须手动处理
-	            type="MANAGED"：设置事务被管理，例如spring中的AOP
-            -->
+    <environments default="development">
+        <!-- 开发环境 -->
+        <environment id="development">
+            <!-- 设置事务管理器类型，
+             属性：type="JDBC" 表示使用JDBC原生的事务管理方式：事务提交/回滚等需要手动操作
+             属性：type="MANAGED" 表示被管理，如Spring-->
             <transactionManager type="JDBC"/>
-            <!--
-            dataSource：设置数据源
-            属性：
-	            type：设置数据源的类型，type="POOLED|UNPOOLED|JNDI"
-	            type="POOLED"：使用数据库连接池，即会将创建的连接进行缓存，下次使用可以从缓存中直接获取，不需要重新创建
-	            type="UNPOOLED"：不使用数据库连接池，即每次使用连接都需要重新创建
-	            type="JNDI"：调用上下文中的数据源
+            <!-- 配置数据库连接
+             属性 type=POOLED 表示使用数据库连接池缓存数据库连接。将数据库连接保存下来，以便下次直接从缓存中取出
+             属性 type=UNPOOLED 表示不使用数据库连接池。不将数据库连接保存下来
+             属性 type=JNDI 表示使用上下文中的数据源
             -->
             <dataSource type="POOLED">
-                <!--设置驱动类的全类名-->
+                <!-- 配置数据源，推荐使用properties配置文件引入，${key}获取-->
+<!--                <property name="driver" value="com.mysql.jdbc.Driver"/>-->
                 <property name="driver" value="${jdbc.driver}"/>
-                <!--设置连接数据库的连接地址-->
                 <property name="url" value="${jdbc.url}"/>
-                <!--设置连接数据库的用户名-->
                 <property name="username" value="${jdbc.username}"/>
-                <!--设置连接数据库的密码-->
                 <property name="password" value="${jdbc.password}"/>
             </dataSource>
         </environment>
+        <!-- 测试环境-->
+        <environment id="test">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql:///mybatis"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+
     </environments>
-    <!--引入映射文件-->
+
+<!--    引入映射文件，一个mapper文件对应一个接口-->
     <mappers>
-        <!-- <mapper resource="UserMapper.xml"/> -->
-        <!--
-        以包为单位，将包下所有的映射文件引入核心配置文件
-        注意：
-			1. 此方式必须保证mapper接口和mapper映射文件必须在相同的包下
-			2. mapper接口要和mapper映射文件的名字一致
-        -->
-        <package name="com.atguigu.mybatis.mapper"/>
+<!--        <mapper resource="mappers/UserMapper.xml" />-->
+        <!-- 以包为单位，引入mapper映射文件
+        两个要求：
+            1、mapper接口所在的包要和映射文件所在的包一致
+            2、mapper接口要和映射文件的名字一致
+            -->
+
+        <package name="com.ly.mybatis.mapper"/>
     </mappers>
 </configuration>
 ```
@@ -281,6 +337,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 # 默认的类型别名
 ![](Resources/默认的类型别名1.png)
 ![](Resources/默认的类型别名2.png)
+
 # MyBatis的增删改查
 1. 添加
 	```xml
@@ -305,119 +362,261 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 	```
 4. 查询一个实体类对象
 	```xml
-   <!--User getUserById();-->  
-	<select id="getUserById" resultType="com.atguigu.mybatis.bean.User">  
-		select * from t_user where id = 2  
+  <!-- 查询功能必须设置resulType/resultMap 表示结果类型，mybatis会将查询到的结果转化成这个类型，然后再转化为对应函数selectOneBean()的返回值返回
+	        resultType（结果类型）：全类名（设置默认的映射关系，属性名一致则赋值否则不赋值） 【用于一行多列，或多行多列,或单行单列，或多行单列】
+	        resultMap（结果映射）：（设置自定义的映射关系，即sql字段名和java属性名不一致时） 【用于一行多列，或多行多列,或单行单列，或多行单列】
+	    -->
+	<select id="selectOneBean" resultType="com.ly.mybatis.pojo.User">
+	    select username  from t_user where id=13;
 	</select>
 	```
 5. 查询集合
 	```xml
-	<!--List<User> getUserList();-->
-	<select id="getUserList" resultType="com.atguigu.mybatis.bean.User">
-		select * from t_user
-	</select>
+	<!--List<User> getAllUser();-->
+	<!--    <select id="getAllUser" resultType="com.ly.mybatis.pojo.User">-->
+	    <!-- 使用mybatis配置文件中 配置的全类名的 别名User（不区分大小写）-->
+	    <select id="getAllUser" resultType="User">
+	        select username from t_user;
+	    </select>
 	```
 - 注意：
 	1. 查询的标签select必须设置属性resultType或resultMap，用于设置实体类和数据库表的映射关系  
 		- resultType：自动映射，用于属性名和表中字段名一致的情况  
 		- resultMap：自定义映射，用于一对多或多对一或字段名和属性名不一致的情况  
-	2. 当查询的数据为多条时，不能使用实体类作为返回值，只能使用集合，否则会抛出异常TooManyResultsException；但是若查询的数据只有一条，可以使用实体类或集合作为返回值
+	2. ***当查询的数据为多条时，不能使用实体类作为返回值，只能使用集合***，否则会抛出异常TooManyResultsException；但是若查询的数据只有一条，可以使用实体类或集合作为返回值
 # MyBatis获取参数值的两种方式（重点）
 - MyBatis获取参数值的两种方式：${}和#{}  
 - ${}的本质就是字符串拼接，#{}的本质就是占位符赋值  
 - ${}使用字符串拼接的方式拼接sql，若为字符串类型或日期类型的字段进行赋值时，需要手动加单引号；但是#{}使用占位符赋值的方式拼接sql，此时为字符串类型或日期类型的字段进行赋值时，可以自动添加单引号
-## 单个字面量类型的参数
-- 若mapper接口中的方法参数为单个的字面量类型，此时可以使用\${}和#{}以任意的名称（最好见名识意）获取参数的值，注意${}需要手动加单引号
-```xml
-<!--User getUserByUsername(String username);-->
-<select id="getUserByUsername" resultType="User">
-	select * from t_user where username = #{username}
-</select>
+## 1、单个字面量类型的参数
+- 若mapper接口中的方法参数为单个的字面量类型，此时可以使用\${xxx}和#{xxx}以任意的名称（最好见名识意）获取参数的值，注意${}需要手动加单引号
+
+```java
+//ParameterMapper.java
+
+/**
+ * 根据用户名返回用户信息
+ */
+User getUserByUsername(String username);
 ```
+
 ```xml
-<!--User getUserByUsername(String username);-->
-<select id="getUserByUsername" resultType="User">  
-	select * from t_user where username = '${username}'  
-</select>
+<!-- ParameterMapper.xml -->
+
+<!--
+    * MyBatis获取参数值的两种方式：
+    * ${}: 表示字符串拼接 （存在sql注入风险，和单引号'）
+    * #{}: 表示占位符（推荐使用）
+    -->
+<!--    User getUserByUsername(String username);    #{}内部可以填入任意名称-->
+    <select id="getUserByUsername" resultType="User">
+        <!-- select * from t_user where username=#{username}; -->
+        select * from t_user where username='${username}';
+    </select>
 ```
-## 多个字面量类型的参数
+```java
+    /*
+     * 单字面量情况，即一个参数
+     */
+    @Test
+    public void getUserByUsername() throws IOException {
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        ParameterMapper parameterMapper = sqlSession.getMapper(ParameterMapper.class);
+        User user = parameterMapper.getUserByUsername("admin");
+        System.out.println(user);
+
+        sqlSession.commit();
+    }
+```
+## 2、多个字面量类型的参数
 - 若mapper接口中的方法参数为多个时，此时MyBatis会自动将这些参数放在一个map集合中
 	1. 以arg0,arg1...为键，以参数为值；
 	2. 以param1,param2...为键，以参数为值；
+
+```java
+//ParameterMapper.java
+    
+/**
+ * 验证登陆
+ */
+User checkLogin(String username,String password,Integer id);
+```
+
 - 因此只需要通过\${}和#{}访问map集合的键就可以获取相对应的值，注意${}需要手动加单引号。
 - 使用arg或者param都行，要注意的是，arg是从arg0开始的，param是从param1开始的
+
 ```xml
-<!--User checkLogin(String username,String password);-->
-<select id="checkLogin" resultType="User">  
-	select * from t_user where username = #{arg0} and password = #{arg1}  
-</select>
+<!--ParameterMapper.xml -->
+
+<!--    User checkLogin(String username,String password,Integer id);-->
+    <select id="checkLogin" resultType="User">
+        <!-- select * from t_user where username=#{arg0} and password=#{arg1} and id=#{arg2}; -->
+        select * from t_user where username='${arg0}' and password='${arg1}' and id='${arg2}';
+    </select>
 ```
 ```xml
-<!--User checkLogin(String username,String password);-->
+    /*
+     * 多个字面量时，即多个参数
+     */
+    @Test
+    public void checkLogin() throws IOException {
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        ParameterMapper parameterMapper = sqlSession.getMapper(ParameterMapper.class);
+        User user = parameterMapper.checkLogin("admin","123456",13);
+        System.out.println(user);
+
+        sqlSession.commit();
+    }<!--User checkLogin(String username,String password);-->
 <select id="checkLogin" resultType="User">
 	select * from t_user where username = '${param1}' and password = '${param2}'
 </select>
 ```
-## map集合类型的参数
+## 3、map集合类型的参数
 - 若mapper接口中的方法需要的参数为多个时，此时可以手动创建map集合，将这些数据放在map中只需要通过\${}和#{}访问map集合的键就可以获取相对应的值，注意${}需要手动加单引号
-```xml
-<!--User checkLoginByMap(Map<String,Object> map);-->
-<select id="checkLoginByMap" resultType="User">
-	select * from t_user where username = #{username} and password = #{password}
-</select>
-```
+
 ```java
-@Test
-public void checkLoginByMap() {
-	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-	ParameterMapper mapper = sqlSession.getMapper(ParameterMapper.class);
-	Map<String,Object> map = new HashMap<>();
-	map.put("usermane","admin");
-	map.put("password","123456");
-	User user = mapper.checkLoginByMap(map);
-	System.out.println(user);
-}
+//ParameterMapper.java
+
+/**
+ * 验证登陆（手动传递参数map集合）
+ */
+User checkLoginByMap(Map<String,Object> map);
 ```
-## 实体类类型的参数
-- 若mapper接口中的方法参数为实体类对象时此时可以使用\${}和#{}，通过访问实体类对象中的属性名获取属性值，注意${}需要手动加单引号
+
 ```xml
-<!--int insertUser(User user);-->
-<insert id="insertUser">
-	insert into t_user values(null,#{username},#{password},#{age},#{sex},#{email})
-</insert>
-```
-```java
-@Test
-public void insertUser() {
-	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-	ParameterMapper mapper = sqlSession.getMapper(ParameterMapper.class);
-	User user = new User(null,"Tom","123456",12,"男","123@321.com");
-	mapper.insertUser(user);
-}
-```
-## 使用@Param标识参数
-- 可以通过@Param注解标识mapper接口中的方法参数，此时，会将这些参数放在map集合中 
-	1. 以@Param注解的value属性值为键，以参数为值；
-	2. 以param1,param2...为键，以参数为值；
-- 只需要通过\${}和#{}访问map集合的键就可以获取相对应的值，注意${}需要手动加单引号
-```xml
-<!--User CheckLoginByParam(@Param("username") String username, @Param("password") String password);-->
-    <select id="CheckLoginByParam" resultType="User">
-        select * from t_user where username = #{username} and password = #{password}
+<!-- ParameterMapper.xml-->
+
+<!--    User checkLoginByMap(Map<String,Object> map);-->
+    <select id="checkLoginByMap" resultType="User">
+        select * from t_user where username='${username}' and password='${password}' and id=${id};
     </select>
 ```
 ```java
-@Test
-public void checkLoginByParam() {
-	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-	ParameterMapper mapper = sqlSession.getMapper(ParameterMapper.class);
-	mapper.CheckLoginByParam("admin","123456");
-}
+    /*
+     * 传递参数为map集合时
+     * 即多个字面量时，即多个参数 (手动设置参数Map集合，自己规定参数key不用arg/param)
+     */
+    @Test
+    public void checkLoginByMap() throws IOException {
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        ParameterMapper parameterMapper = sqlSession.getMapper(ParameterMapper.class);
+        Map<String, Object> map = new HashMap<String, Object>();
+        //这个键key 必须和mapper.xml文件中的key值一样，才能取到参数
+        map.put("username","admin");
+        map.put("password","123456");
+        map.put("id",13);
+
+        User user = parameterMapper.checkLoginByMap(map);
+        System.out.println(user);
+        sqlSession.commit();
+    }
+```
+## 4、实体类类型的参数
+- 若mapper接口中的方法参数为实体类对象时此时可以使用\${}和#{}，通过访问实体类对象中的属性名获取属性值，注意${}需要手动加单引号
+
+```java
+ParameterMapper.java
+/**
+ * 验证登陆（手动传递参数实体Bean）
+ */
+User checkLoginByBean(User user);
+```
+
+```xml
+<!-- ParameterMapper.xml -->
+
+<!--    User checkLoginByBean(User user);-->
+    <select id="checkLoginByBean" resultType="User">
+        select * from t_user where username='${username}' and password='${password}' and id=${id};
+    </select>
+```
+```java
+    /*
+     * 传递参数为实体类Bean时
+     */
+    @Test
+    public void checkLoginByBean() throws IOException {
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        ParameterMapper parameterMapper = sqlSession.getMapper(ParameterMapper.class);
+        User root = parameterMapper.checkLoginByBean(new User(14, "root", "123", null, '1', null));
+        System.out.println(root);
+        sqlSession.commit();
+    }
+```
+## 5、使用@Param标识参数
+- 可以通过@Param注解标识mapper接口中的方法参数，此时，会将这些参数放在map集合中 
+	1. 以@Param注解的value属性值为键，以参数为值；
+	2. 以param1,param2...为键，以参数为值；
+
+```java
+//ParameterMapper.java
+
+/**
+  * 验证登陆(使用@param注解) 自动放到map集合中 key就为注解的value  值就为标识的参数名
+  */
+User checkLoginByAnnotation(@Param("username") String username, @Param("password") String password, @Param("identity") Integer id);
+```
+
+- 只需要通过\${}和#{}访问map集合的键就可以获取相对应的值，注意${}需要手动加单引号
+
+```xml
+<!-- ParameterMapper.xml文件-->
+
+<!--    User checkLoginByAnnotation(@Param("username") String username, @Param("password") String password, @Param("identity") Integer id);-->
+    <select id="checkLoginByAnnotation" resultType="User">
+        select * from t_user where username='${username}' and password='${password}' and id=${identity};
+    </select>
+```
+```java
+    /*
+     * 传递多个参数，使用注解@Param，自动将参数放到map集合中 key就为注解的value  值就为标识的参数
+     * 还有一种取值方式 即param1，param2...（可以理解为arg0..被替换了）
+     */
+    @Test
+    public void checkLoginByAnnotation() throws IOException {
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        ParameterMapper parameterMapper = sqlSession.getMapper(ParameterMapper.class);
+        User root = parameterMapper.checkLoginByAnnotation("root", "123", 14);
+        System.out.println(root);
+        sqlSession.commit();
+    }
 ```
 ## 总结
+
+> ```JAVA
+>     * MyBatis获取参数值的两种方式：
+>     * ${xxx}: 表示字符串拼接 （存在sql注入风险，和需要手动加单引号'）xxx表示任意名称
+>     * #{xxx}: 表示占位符（推荐使用） xxx表示任意名称
+>     * MyBatis获取参数的各种情况：
+>     *  1、mapper接口方法的参数为单个字面量时
+>     *      ${xxx}和#{}均可以使用，其中名称xxx随意，但是要注意${}必须加上单引号或双引号【字符串拼接】
+>     *  2、mapper接口方法的形参为多个参数时 【mybatis会将参数放到map集合中】
+>     *      #{xxx}中xxx必须按照顺序取arg0,arg1,arg2...或param1,param2,param3... 可以交叉着用
+>     *      ${xxx}中xxx必须按照顺序取arg0,arg1,arg2...或param1,param2,param3... 可以交叉着用,同时需要加上单引号
+>     *  3、mapper接口方法参数为多个时，手动将参数放入map集合中存储（就不必须用agr/param取值了）
+>     *      sql中键就是put方法的key
+>     *  4、mapper接口方法参数为实体类Bean时，和map一样
+>     *      sql中键就是实体Bean的属性名（必须完全一样，且有get方法）
+>     *
+> *      5、使用@param注解 参数命名参数 (以注解的值，或param1..作为sql参数)
+> ```
+
 - 建议分成两种情况进行处理
 	1. 实体类类型的参数
+	
 	2. 使用@Param标识参数
+	
+	   
 # MyBatis的各种查询功能
 1. 如果查询出的数据只有一条，可以通过
 	1. 实体类对象接收

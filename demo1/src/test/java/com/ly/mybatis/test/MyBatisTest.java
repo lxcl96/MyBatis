@@ -1,6 +1,7 @@
 package com.ly.mybatis.test;
 
 import com.ly.mybatis.mapper.UserMapper;
+import com.ly.mybatis.pojo.User;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * @FileName:MyBatisTest.class
@@ -89,6 +91,48 @@ public class MyBatisTest {
         for (Method declaredMethod : declaredMethods) {
             System.out.println("方法： " + declaredMethod);
         }
+
+    }
+
+
+    @Test
+    public void testSelectOneBean() throws IOException {
+        //1、读取mybatis全局配置文件
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        //2、创建SqlSessionFactoryBuilder
+        SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+        //3、通过SqlSessionFactoryBuilder创建SqlSessionFactory
+        SqlSessionFactory sqlSessionFactory = builder.build(is);
+        //4、由工厂SqlSessionFactory创建 sql语句执行的基础SqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        //5、由SqlSession通过动态代理 创建接口的实现类来及执行语句
+        UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+        //6、执行sql
+        User user = userMapper.selectOneBean();
+        System.out.println(user);
+        //7、提交
+        sqlSession.commit();
+
+    }
+
+
+    @Test
+    public void getAllUser() throws IOException {
+        //1、读取mybatis全局配置文件
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        //2、创建SqlSessionFactoryBuilder
+        SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+        //3、通过SqlSessionFactoryBuilder创建SqlSessionFactory
+        SqlSessionFactory sqlSessionFactory = builder.build(is);
+        //4、由工厂SqlSessionFactory创建 sql语句执行的基础SqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        //5、由SqlSession通过动态代理 创建接口的实现类来及执行语句
+        UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
+        //6、执行sql
+        List<User> allUser = userMapper.getAllUser();
+        System.out.println(allUser);
+        //7、提交
+        sqlSession.commit();
 
     }
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名-->
+<mapper namespace="com.ly.mybatis.mapper.UserMapper">
+    <!-- id为接口的某个函数名，一一对应-->
+    <insert id="insertUser" >
+        insert t_user values (null ,'admin','123456',23,'男','123456@qq.com');
+    </insert>
+
+    <update id="updateUser" >
+        update t_user set sex='女';
+    </update>
+
+    <delete id="deleteUser">
+        delete from t_user where id = 12;
+    </delete>
+
+    <!-- 查询功能必须设置resulType/resultMap 表示结果类型，mybatis会将查询到的结果转化成这个类型，然后再转化为对应函数selectOneBean()的返回值返回
+        resultType（结果类型）：全类名（设置默认的映射关系，属性名一致则赋值否则不赋值） 【用于一行多列，或多行多列,或单行单列，或多行单列】
+        resultMap（结果映射）：（设置自定义的映射关系，即sql字段名和java属性名不一致时） 【用于一行多列，或多行多列,或单行单列，或多行单列】
+    -->
+    <select id="selectOneBean" resultType="com.ly.mybatis.pojo.User">
+        select username  from t_user where id=13;
+    </select>
+
+
+<!--    <select id="getAllUser" resultType="com.ly.mybatis.pojo.User">-->
+    <!-- 使用mybatis配置文件中 配置的全类名的 别名User（不区分大小写）-->
+    <select id="getAllUser" resultType="User">
+        select username from t_user;
+    </select>
+
+</mapper>

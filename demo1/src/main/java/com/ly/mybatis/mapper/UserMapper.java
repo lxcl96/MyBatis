@@ -1,5 +1,9 @@
 package com.ly.mybatis.mapper;
 
+import com.ly.mybatis.pojo.User;
+
+import java.util.List;
+
 /**
  * @FileName:UserMapper.class
  * @Author:ly
@@ -28,4 +32,15 @@ public interface UserMapper {
      * @return 影响的行数
      */
     int deleteUser();
+
+
+    /***
+     * 查询一个实体类对象
+     */
+    User selectOneBean();
+
+    /**
+     * 查询所有用户数据
+     */
+    List<User> getAllUser();
 }

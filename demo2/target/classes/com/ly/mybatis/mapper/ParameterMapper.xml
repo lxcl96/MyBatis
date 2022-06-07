@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名 必须为全类名，不能省略，不要因为按包导入就不一样了，又不是起别名-->
+<mapper namespace="com.ly.mybatis.mapper.ParameterMapper">
+
+<!--    List<User> getAllUser();-->
+    <select id="getAllUser" resultType="User">
+        select * from t_user;
+    </select>
+
+<!--
+    * MyBatis获取参数值的两种方式：
+    * ${}: 表示字符串拼接 （存在sql注入风险，和单引号'）
+    * #{}: 表示占位符（推荐使用）
+    -->
+<!--    User getUserByUsername(String username);    #{}内部可以填入任意名称-->
+    <select id="getUserByUsername" resultType="User">
+        <!-- select * from t_user where username=#{username}; -->
+        select * from t_user where username='${username}';
+    </select>
+
+
+<!--    User checkLogin(String username,String password,Integer id);-->
+    <select id="checkLogin" resultType="User">
+        <!-- select * from t_user where username=#{arg0} and password=#{arg1} and id=#{arg2}; -->
+        select * from t_user where username='${arg0}' and password='${arg1}' and id='${arg2}';
+    </select>
+
+<!--    User checkLoginByMap(Map<String,Object> map);-->
+    <select id="checkLoginByMap" resultType="User">
+        select * from t_user where username='${username}' and password='${password}' and id=${id};
+    </select>
+
+<!--    User checkLoginByBean(User user);-->
+    <select id="checkLoginByBean" resultType="User">
+        select * from t_user where username='${username}' and password='${password}' and id=${id};
+    </select>
+
+<!--    User checkLoginByAnnotation(@Param("username") String username, @Param("password") String password, @Param("identity") Integer id);-->
+    <select id="checkLoginByAnnotation" resultType="User">
+        select * from t_user where username='${username}' and password='${password}' and id=${identity};
+    </select>
+</mapper>
