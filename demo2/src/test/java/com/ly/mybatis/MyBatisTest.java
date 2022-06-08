@@ -12,9 +12,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @FileName:MyBatisTest.class
@@ -144,7 +142,7 @@ public class MyBatisTest {
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
         SqlSession sqlSession = sqlSessionFactory.openSession();
         ParameterMapper parameterMapper = sqlSession.getMapper(ParameterMapper.class);
-        User root = parameterMapper.checkLoginByBean(new User(14, "root", "123", null, '1', null));
+        User root = parameterMapper.checkLoginByBean(new User(14, "root", "123", null, '1', null,null));
         System.out.println(root);
         sqlSession.commit();
     }
@@ -161,5 +159,16 @@ public class MyBatisTest {
         User root = parameterMapper.checkLoginByAnnotation("root", "123", 14);
         System.out.println(root);
         sqlSession.commit();
+    }
+
+    @Test
+    public void test() {
+        SortedMap<Integer, String> map = new TreeMap<>();
+        System.out.println(map);
+        String name = String.valueOf(map.size());
+        System.out.println(name);
+        map.put(0,name);
+        SortedMap<Integer, String> names = Collections.unmodifiableSortedMap(map);
+        System.out.println(names);
     }
 }

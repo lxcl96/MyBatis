@@ -626,22 +626,30 @@ User checkLoginByAnnotation(@Param("username") String username, @Param("password
 	1. 实体类类型的LIst集合接收
 	2. Map类型的LIst集合接收
 	3. 在mapper接口的方法上添加@MapKey注解
-## 查询一个实体类对象
+## 1、查询一个实体类对象
 ```java
+//接口
 /**
- * 根据用户id查询用户信息
- * @param id
- * @return
- */
-User getUserById(@Param("id") int id);
+  * 根据id查询单个用户信息
+  */
+User getUserById(@Param("id") Integer id);
 ```
 ```xml
-<!--User getUserById(@Param("id") int id);-->
+//mapper文件
+<!-- User getUserById(@Param("id") Integer id); -->
 <select id="getUserById" resultType="User">
-	select * from t_user where id = #{id}
+    select * from t_user;
 </select>
 ```
-## 查询一个List集合
+`MyBatis查询调用方法是根据接口的返回类型（是否为集合）来调用对应方法：`
+
++ `即如果返回为单个对象，则调用selectOne()方法，但是如果此时查询到多条语句就会报错。`
++ `如果返回为一个集合，则调用executeForMany()方法`
++ `如果返回的是一个map集合，则调用executeForMap()方法`
++ `如果返回类型为Cursor，则调用的是executeForCursor()方法`
+
+## 2、查询一个List集合
+
 ```java
 /**
  * 查询所有用户信息
@@ -652,10 +660,10 @@ List<User> getUserList();
 ```xml
 <!--List<User> getUserList();-->
 <select id="getUserList" resultType="User">
-	select * from t_user
+	select * from t_user;
 </select>
 ```
-## 查询单个数据
+## 3、查询单个数据
 ```java
 /**  
  * 查询用户的总记录数  
@@ -673,7 +681,7 @@ int getCount();
 	select count(id) from t_user
 </select>
 ```
-## 查询一条数据为map集合
+## 4、查询一条数据为map集合
 ```java
 /**  
  * 根据用户id查询用户信息为map集合  
@@ -689,8 +697,11 @@ Map<String, Object> getUserToMap(@Param("id") int id);
 </select>
 <!--结果：{password=123456, sex=男, id=1, age=23, username=admin}-->
 ```
-## 查询多条数据为map集合
-### 方法一
+## 5、查询多条数据为map集合
+
+这种情况使用很多，因为可以多表联合查询。最后得到的map集合，返回给浏览器就是一个json对象。
+
+### 方法一 使用List<Map<String,Object>>
 ```java
 /**  
  * 查询所有用户信息为map集合  
@@ -711,12 +722,18 @@ List<Map<String, Object>> getAllUserToMap();
 	{password=123456, sex=男, id=3, age=23, username=张三}]
 -->
 ```
-### 方法二
+### 方法二 使用注解@MapKey()
+
+最终返回的依旧是一个map集合，只是里面嵌套map集合
+
 ```java
 /**
  * 查询所有用户信息为map集合
- * @return
- * 将表中的数据以map集合的方式查询，一条数据对应一个map；若有多条数据，就会产生多个map集合，并且最终要以一个map的方式返回数据，此时需要通过@MapKey注解设置map集合的键，值是每条数据所对应的map集合
+ * @MapKey()即将多个查询集合，放在一个集合中map{k1:map1,k2:map2..}
+ * 使用@MapKey注解标记多map，其中
+ *			注解的值必须为sql列名任意一个，用作集合map的key(不是sql列名的话只有最后一条记录，如果key值重复会把数据覆盖掉，所以推荐，key为id) 【区分大小写】
+ *			则此时集合map的值就是：key值对应所在的查询结果的行
+ *
  */
 @MapKey("id")
 Map<String, Object> getAllUserToMap();
@@ -724,19 +741,40 @@ Map<String, Object> getAllUserToMap();
 ```xml
 <!--Map<String, Object> getAllUserToMap();-->
 <select id="getAllUserToMap" resultType="map">
-	select * from t_user
+	select * from t_user;
 </select>
 <!--
 	结果：
 	{
+ //key1=map1,key2=map2...
 	1={password=123456, sex=男, id=1, age=23, username=admin},
 	2={password=123456, sex=男, id=2, age=23, username=张三},
 	3={password=123456, sex=男, id=3, age=23, username=张三}
 	}
 -->
 ```
+```java
+ @Test
+ public void getAllUserToMap() throws Exception {
+     InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+     SqlSession sqlSession = new SqlSessionFactoryBuilder().build(is).openSession();
+     SelectMapper mapper = sqlSession.getMapper(SelectMapper.class);
+     //正常调用
+     Map<String, Object> map = mapper.getAllUserToMap();
+     System.out.println(map);
+ }
+```
+
 # 特殊SQL的执行
-## 模糊查询
+
+特殊SQL只需要记住，占位符#{}会自动添加单引号。而字符串拼接${}不会自动加单引号。
+
+特殊SQL一般都是用${}
+
+## 1、模糊查询
+
+如果是占位符#{}的话，特殊字符如%需要手动添加引号。
+
 ```java
 /**
  * 根据用户名进行模糊查询
@@ -750,12 +788,13 @@ List<User> getUserByLike(@Param("username") String username);
 <!--List<User> getUserByLike(@Param("username") String username);-->
 <select id="getUserByLike" resultType="User">
 	<!--select * from t_user where username like '%${mohu}%'-->  
+   <!-- mysql的字符串函数 contact -->
 	<!--select * from t_user where username like concat('%',#{mohu},'%')-->  
 	select * from t_user where username like "%"#{mohu}"%"
 </select>
 ```
 - 其中`select * from t_user where username like "%"#{mohu}"%"`是最常用的
-## 批量删除
+## 2、批量删除
 - 只能使用\${}，如果使用#{}，则解析后的sql语句为`delete from t_user where id in ('1,2,3')`，这样是将`1,2,3`看做是一个整体，只有id为`1,2,3`的数据会被删除。正确的语句应该是`delete from t_user where id in (1,2,3)`，或者`delete from t_user where id in ('1','2','3')`
 ```java
 /**
@@ -781,7 +820,8 @@ public void deleteMore() {
 	System.out.println(result);
 }
 ```
-## 动态设置表名
+## 3、动态设置表名
+
 - 只能使用${}，因为表名不能加单引号
 ```java
 /**
@@ -798,7 +838,7 @@ List<User> getUserByTable(@Param("tableName") String tableName);
 	select * from ${tableName}
 </select>
 ```
-## 添加功能获取自增的主键
+## 4、添加功能获取自增的主键
 - 使用场景
 	- t_clazz(clazz_id,clazz_name)  
 	- t_student(student_id,student_name,clazz_id)  
@@ -809,30 +849,55 @@ List<User> getUserByTable(@Param("tableName") String tableName);
 	- useGeneratedKeys：设置使用自增的主键  
 	* keyProperty：因为增删改有统一的返回值是受影响的行数，因此只能将获取的自增的主键放在传输的参数user对象的某个属性中
 ```java
-/**
- * 添加用户信息
- * @param user 
- * @date 2022/2/27 15:04
- */
-void insertUser(User user);
+   /**
+     * 新增user信息，同时给user分配新增班级的主键
+     * @param user 用户实体Bean
+     */
+    int insertUser(User user);
+
+    /**
+     * 新增class信息，同时给user分配新增班级的主键
+     * @param cls 班级实体Bean
+     */
+    int insertClass(Class cls);
 ```
 ```xml
-<!--void insertUser(User user);-->
-<insert id="insertUser" useGeneratedKeys="true" keyProperty="id">
-	insert into t_user values (null,#{username},#{password},#{age},#{sex},#{email})
-</insert>
+    <!-- int insertUser(@Param("User") User user);-->
+    <insert id="insertUser">
+        insert into t_user values(null,#{username},#{password},#{age},#{sex},#{email},#{classId});
+    </insert>
+
+    <!-- int insertClass(@Param("className") String className);-->
+    <!-- useGeneratedKeys：表示是否使用数据库自动递增主键，true表示使用
+        keyProperty：表示返回新增加的数据的自动递增的主键（因为jdbc返回值就是受影响的行数，无法改变，只能通过属性赋值），其值为id表示会把数据回显到 参数班级Bean中的id属性
+        -->
+    <insert id="insertClass" useGeneratedKeys="true" keyProperty="id">
+        insert into t_class values(null,#{className});
+    </insert>
 ```
 ```java
-//测试类
-@Test
-public void insertUser() {
-	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-	SQLMapper mapper = sqlSession.getMapper(SQLMapper.class);
-	User user = new User(null, "ton", "123", 23, "男", "123@321.com");
-	mapper.insertUser(user);
-	System.out.println(user);
-	//输出：user{id=10, username='ton', password='123', age=23, sex='男', email='123@321.com'}，自增主键存放到了user的id属性中
-}
+    @Test
+    public void testInsertUserAndClass() throws Exception {
+        InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(is).openSession();
+        SQLMapper mapper = sqlSession.getMapper(SQLMapper.class);
+        Class cls = new Class(null, "终极一班");
+        int clsNum = mapper.insertClass(cls);
+        System.out.println("受影响的行数：" + clsNum);//1
+        System.out.println("班级自动递增后的主键为：" + cls.getId());//自动递增后的主键
+
+        //回显自动递增的班级id，关联到用户表
+        User user = new User(null, "里西奥", "lixiao", 35, '男', "lixiao@li.com", cls.getId());
+        int userNum = mapper.insertUser(user);
+        System.out.println("受影响的行数：" + userNum);
+        
+        System.out.println("*****班级用户信息*****");
+        System.out.println(cls);//Class{id=6, className='终极一班'}
+        System.out.println(user);//User{id=null, username='里西奥', password='lixiao', age=35, sex=男, email='lixiao@li.com', classId=6}
+
+        //提交事务
+        sqlSession.commit();
+    }
 ```
 # 自定义映射resultMap
 ## resultMap处理字段和属性的映射关系

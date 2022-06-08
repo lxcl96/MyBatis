@@ -1,5 +1,7 @@
 package com.ly.mybatis.pojo;
 
+import com.sun.istack.internal.Nullable;
+
 /**
  * @FileName:User.class
  * @Author:ly
@@ -13,17 +15,27 @@ public class User {
     private Integer age;
     private char sex;
     private String email;
+    private Integer classId;
 
     public User() {
     }
 
-    public User(Integer id, String username, String password, Integer age, char sex, String email) {
+    public User(Integer id, String username, String password, Integer age, char sex, String email,  Integer classId) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.age = age;
         this.sex = sex;
         this.email = email;
+        this.classId = classId;
+    }
+
+    public Integer getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Integer classId) {
+        this.classId = classId;
     }
 
     public Integer getId() {
@@ -83,6 +95,7 @@ public class User {
                 ", age=" + age +
                 ", sex=" + sex +
                 ", email='" + email + '\'' +
+                ", classId=" + classId +
                 '}';
     }
 }

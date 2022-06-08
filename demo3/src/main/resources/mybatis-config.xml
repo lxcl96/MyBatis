@@ -10,7 +10,6 @@
 
     <!-- 给类起别名，用于查询结果的返回类型   -->
     <typeAliases>
-        <typeAlias type="java.lang.Integer" />
         <package name="com.ly.mybatis.pojo"/>
     </typeAliases>
 
