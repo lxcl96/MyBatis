@@ -1,4 +1,4 @@
-# Mybatis简介
+# 一、Mybatis简介
 ## MyBatis历史
 -    MyBatis最初是Apache的一个开源项目iBatis, 2010年6月这个项目由Apache Software Foundation迁移到了Google Code。随着开发团队转投Google Code旗下，iBatis3.x正式更名为MyBatis。代码于2013年11月迁移到Github
 - iBatis一词来源于“internet”和“abatis”的组合，是一个基于Java的持久层框架。iBatis提供的持久层框架包括SQL Maps和Data Access Objects（DAO）
@@ -25,7 +25,7 @@
 	- 轻量级，性能出色  
 	- SQL 和 Java 编码分开，功能边界清晰。Java代码专注业务、SQL语句专注数据  
 	- 开发效率稍逊于HIbernate，但是完全能够接受
-# 搭建MyBatis
+# 二、搭建MyBatis
 ## 开发环境
 - IDE：idea 2019.2  
 - 构建工具：maven 3.5.4  
@@ -256,7 +256,7 @@ public interface UserMapper {
 	    </root>
 	</log4j:configuration>
 	```
-# 核心配置文件详解
+# 三、核心配置文件详解
 
 参考手册：[mybatis – MyBatis 3 | 配置](https://mybatis.org/mybatis-3/zh/configuration.html#environments)
 
@@ -334,11 +334,11 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 </configuration>
 ```
 - ![](Resources/mapper接口和mapper映射文件在同一包下.png)
-# 默认的类型别名
+# 四、默认的类型别名
 ![](Resources/默认的类型别名1.png)
 ![](Resources/默认的类型别名2.png)
 
-# MyBatis的增删改查
+# 五、MyBatis的增删改查
 1. 添加
 	```xml
 	<!--int insertUser();-->
@@ -384,7 +384,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 		- resultType：自动映射，用于属性名和表中字段名一致的情况  
 		- resultMap：自定义映射，用于一对多或多对一或字段名和属性名不一致的情况  
 	2. ***当查询的数据为多条时，不能使用实体类作为返回值，只能使用集合***，否则会抛出异常TooManyResultsException；但是若查询的数据只有一条，可以使用实体类或集合作为返回值
-# MyBatis获取参数值的两种方式（重点）
+# 六、MyBatis获取参数值的两种方式（重点）
 - MyBatis获取参数值的两种方式：${}和#{}  
 - ${}的本质就是字符串拼接，#{}的本质就是占位符赋值  
 - ${}使用字符串拼接的方式拼接sql，若为字符串类型或日期类型的字段进行赋值时，需要手动加单引号；但是#{}使用占位符赋值的方式拼接sql，此时为字符串类型或日期类型的字段进行赋值时，可以自动添加单引号
@@ -617,7 +617,7 @@ User checkLoginByAnnotation(@Param("username") String username, @Param("password
 	2. 使用@Param标识参数
 	
 	   
-# MyBatis的各种查询功能
+# 七、MyBatis的各种查询功能
 1. 如果查询出的数据只有一条，可以通过
 	1. 实体类对象接收
 	2. List集合接收
@@ -765,7 +765,7 @@ Map<String, Object> getAllUserToMap();
  }
 ```
 
-# 特殊SQL的执行
+# 八、特殊SQL的执行
 
 特殊SQL只需要记住，占位符#{}会自动添加单引号。而字符串拼接${}不会自动加单引号。
 
@@ -899,205 +899,331 @@ List<User> getUserByTable(@Param("tableName") String tableName);
         sqlSession.commit();
     }
 ```
-# 自定义映射resultMap
-## resultMap处理字段和属性的映射关系
-- resultMap：设置自定义映射  
-	- 属性：  
-		- id：表示自定义映射的唯一标识，不能重复
-		- type：查询的数据要映射的实体类的类型  
-	- 子标签：  
-		- id：设置主键的映射关系  
-		- result：设置普通字段的映射关系  
-		- 子标签属性：  
-			- property：设置映射关系中实体类中的属性名  
-			- column：设置映射关系中表中的字段名
-- 若字段名和实体类中的属性名不一致，则可以通过resultMap设置自定义映射，即使字段名和属性名一致的属性也要映射，也就是全部属性都要列出来
+# 九、自定义映射resultMap
+
+MyBatis查询结果赋值给实体类对象的本质是：通过查询列字段和属性完全一样，通过set方法赋值，通过get方法取值。
+
+## 1、resultMap处理字段和属性的映射关系
+- > resultMap：设置自定义映射  
+	> - 属性：  
+	> 	- id：表示自定义映射的唯一标识，不能重复
+	> 	- type：查询的数据要映射的实体类的类型  
+	> - 子标签：  
+	> 	- id：设置主键的映射关系  
+	> 	- result：设置普通字段的映射关系  
+	> 	- 子标签属性：  
+	> 		- property：设置映射关系中实体类中的属性名  
+	> 		- column：设置映射关系中表中的字段名
+	
+	
+
+### 1.1、若字段名和实体类中的属性名不一致，则可以通过resultMap设置自定义映射
+
 ```xml
-<resultMap id="empResultMap" type="Emp">
-	<id property="eid" column="eid"></id>
-	<result property="empName" column="emp_name"></result>
-	<result property="age" column="age"></result>
-	<result property="sex" column="sex"></result>
-	<result property="email" column="email"></result>
-</resultMap>
-<!--List<Emp> getAllEmp();-->
-<select id="getAllEmp" resultMap="empResultMap">
-	select * from t_emp
+<!-- 建立实体bean属性property 和列字段值column的映射关系-->
+
+<!--指定指定实现接口 即：接口的全类名-->
+<mapper namespace="com.ly.mybatis.mapper.EmployeeMapper">
+
+
+    <!-- type直接写Employee就行，因为mybatis配置文件中已经起了别名
+         type表示要将哪个类型bean进行映射-->
+    <resultMap id="empResultMap" type="com.ly.mybatis.pojo.Employee">
+        <!-- 设置主键映射关系  property表示实体bean的属性   column表示sql的列字段,不能重复-->
+        <id property="eid" column="eid" />
+
+        <!-- result表示设置普通字段的映射关系  字段和属性一样的可以不设置，但是建议设置-->
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result> 
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+    </resultMap>
+
+    <!-- 解决方法3：使用结果集映射，resultMap将字段映射成自定义属性-->
+    <select id="getAllEmployee" resultMap="empResultMap">
+        select * from t_emp;
+    </select>
+
+</mapper>
+```
+
+
+### 1.2、若字段名和实体类中的属性名不一致，但是字段名符合数据库的规则（使用_），实体类中的属性名符合Java的规则（使用驼峰）。此时也可通过以下两种方式处理字段名和实体类中的属性的映射关系  
+
+#### 	1.2.1、可以通过为字段起别名的方式，保证和实体类中的属性名保持一致  
+
+```xml
+<!-- List<Map<String,Object>> getAllEmployee();-->
+<select id="getAllEmployeeOld" resultType="Employee">
+    <!-- 解决方法1：给不一致的字段取别名，别名和bena对象的属性值相同即可-->
+    select eid,emp_name empName,age,email,did from t_emp;
+
 </select>
 ```
-- 若字段名和实体类中的属性名不一致，但是字段名符合数据库的规则（使用_），实体类中的属性名符合Java的规则（使用驼峰）。此时也可通过以下两种方式处理字段名和实体类中的属性的映射关系  
-	1. 可以通过为字段起别名的方式，保证和实体类中的属性名保持一致  
-		```xml
-		<!--List<Emp> getAllEmp();-->
-		<select id="getAllEmp" resultType="Emp">
-			select eid,emp_name empName,age,sex,email from t_emp
-		</select>
-		```
-	2. 可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
-		```xml
-    <settings>
-        <setting name="mapUnderscoreToCamelCase" value="true"/>
-    </settings>
-		```
-## 多对一映射处理
+
+#### 	1.2.2、可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
+
+```xml
+//mybatis-config.xml 配置文件
+<!-- 设置mybatis的全局配置-->
+<settings>
+    <!-- 将下划线自动映射为驼峰-->
+    <setting name="mapUnderscoreToCamelCase" value="true"/>
+</settings>
+```
+
+
+
+```xml
+//mapper文件
+<!-- List<Map<String,Object>> getAllEmployee();-->
+<select id="getAllEmployeeOld" resultType="Employee">
+   
+    <!-- 解决方法2：全局变量（mybatis-config.xml）中开启下画线自动转驼峰风格，仅此而已。如：emp_name自动转化为empName，em_pname为emPname-->
+    select * from t_emp;
+</select>
+```
+
+## 2、多对一映射处理
+
+==实体类Bean处理多对一关系（当前这个实体类为多），通过建立一个属性对象 T==
+
+如员工表对应部门表，则需要在员工信息中建立部门类型的成员变量。
+
 >查询员工信息以及员工所对应的部门信息
 ```java
-public class Emp {  
-	private Integer eid;  
-	private String empName;  
-	private Integer age;  
-	private String sex;  
-	private String email;  
-	private Dept dept;
+public class Employee {
+    private Integer eid;
+    private String empName;
+    private Integer age;
+    private char sex;
+    private String email;
+    //多对一映射关系，在`多`的实体bean中建立`一`的属性，映射
+    private Department department;
+
 	//...构造器、get、set方法等
 }
 ```
-### 级联方式处理映射关系
+### 2.1、级联方式处理映射关系
 ```xml
-<resultMap id="empAndDeptResultMapOne" type="Emp">
-	<id property="eid" column="eid"></id>
-	<result property="empName" column="emp_name"></result>
-	<result property="age" column="age"></result>
-	<result property="sex" column="sex"></result>
-	<result property="email" column="email"></result>
-	<result property="dept.did" column="did"></result>
-	<result property="dept.deptName" column="dept_name"></result>
-</resultMap>
-<!--Emp getEmpAndDept(@Param("eid")Integer eid);-->
-<select id="getEmpAndDept" resultMap="empAndDeptResultMapOne">
-	select * from t_emp left join t_dept on t_emp.eid = t_dept.did where t_emp.eid = #{eid}
-</select>
+<!-- 解决多对一映射除磷：
+            方式1、级联赋值  对部门属性的属性挨个赋值-->
+    <resultMap id="EmployeeAndDepartmentResultMap" type="com.ly.mybatis.pojo.Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+        <!-- 部门属性级联赋值-->
+        <result property="department.did" column="did"></result>
+        <result property="department.deptName" column="dept_name"></result>
+    </resultMap>
+
+    <!-- Employee getEmployeeAndDepartmentById(@Param("id") Integer id);-->
+    <select id="getEmployeeAndDepartmentById" resultMap="EmployeeAndDepartmentResultMap">
+        SELECT * FROM t_emp LEFT JOIN t_dept ON t_emp.did = t_dept.did WHERE t_emp.eid = #{eid};
+    </select>
 ```
-### 使用association处理映射关系
+### 2.2、使用association处理映射关系，相当于内部bean
 - association：处理多对一的映射关系
 - property：需要处理多对的映射关系的属性名
 - javaType：该属性的类型
 ```xml
-<resultMap id="empAndDeptResultMapTwo" type="Emp">
-	<id property="eid" column="eid"></id>
-	<result property="empName" column="emp_name"></result>
-	<result property="age" column="age"></result>
-	<result property="sex" column="sex"></result>
-	<result property="email" column="email"></result>
-	<association property="dept" javaType="Dept">
-		<id property="did" column="did"></id>
-		<result property="deptName" column="dept_name"></result>
-	</association>
-</resultMap>
-<!--Emp getEmpAndDept(@Param("eid")Integer eid);-->
-<select id="getEmpAndDept" resultMap="empAndDeptResultMapTwo">
-	select * from t_emp left join t_dept on t_emp.eid = t_dept.did where t_emp.eid = #{eid}
-</select>
+    <!-- 解决多对一映射除磷：
+            方式2、使用专门的association标签 此标签专门用来处理多对一的问题-->
+    <resultMap id="EmployeeAndDepartmentResultMapTwo" type="com.ly.mybatis.pojo.Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+        <association property="department" javaType="com.ly.mybatis.pojo.Department">
+            <id property="did" column="did" />
+            <result property="deptName" column="dept_name" />
+        </association>
+    </resultMap>
+
+    <!-- Employee getEmployeeAndDepartmentById(@Param("id") Integer id);-->
+    <select id="getEmployeeAndDepartmentById" resultMap="EmployeeAndDepartmentResultMapTwo">
+        SELECT * FROM t_emp LEFT JOIN t_dept ON t_emp.did = t_dept.did WHERE t_emp.eid = #{eid};
+    </select>
 ```
-### 分步查询
+### 2.3、分步查询
 #### 1. 查询员工信息
 - select：设置分布查询的sql的唯一标识（namespace.SQLId或mapper接口的全类名.方法名）
 - column：设置分步查询的条件
 ```java
-//EmpMapper里的方法
-/**
- * 通过分步查询，员工及所对应的部门信息
- * 分步查询第一步：查询员工信息
- * @param  
- * @return com.atguigu.mybatis.pojo.Emp
- * @date 2022/2/27 20:17
- */
-Emp getEmpAndDeptByStepOne(@Param("eid") Integer eid);
+EmployeeMapper.java文件
+	/**
+     * 查询员工以及员工对应的部门信息
+     * 多对一解决方法：
+     * 1、级联赋值
+     * 2、使用association标签
+     * 3、分步骤查询
+     */
+    Employee getEmployeeAndDepartmentById(@Param("eid") Integer eid);
 ```
 ```xml
-<resultMap id="empAndDeptByStepResultMap" type="Emp">
-	<id property="eid" column="eid"></id>
-	<result property="empName" column="emp_name"></result>
-	<result property="age" column="age"></result>
-	<result property="sex" column="sex"></result>
-	<result property="email" column="email"></result>
-	<association property="dept"
-				 select="com.atguigu.mybatis.mapper.DeptMapper.getEmpAndDeptByStepTwo"
-				 column="did"></association>
-</resultMap>
-<!--Emp getEmpAndDeptByStepOne(@Param("eid") Integer eid);-->
-<select id="getEmpAndDeptByStepOne" resultMap="empAndDeptByStepResultMap">
-	select * from t_emp where eid = #{eid}
-</select>
+EmployeeMapper.xml文件
+<!--
+        分步查询：
+            第一步    Employee getEmployeeAndDepartmentByIdStepOne(@Param("eid") Integer eid);
+            第二步    借助association嵌套子查询
+    -->
+    <resultMap id="EmployeeAndDepartmentByStepResultMap" type="com.ly.mybatis.pojo.Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+        <!-- select就是子查询，但是这个是Java所有就调用接口的全类名，通过接口去找对应mapper的xml文件，执行内部sl语句，通过返回值赋值！column就是接口的参数-->
+        <association property="department"
+                     select="com.ly.mybatis.mapper.DepartmentMapper.getDepartmentById"
+                     column="did" />
+    </resultMap>
+
+    <select id="getEmployeeAndDepartmentByIdStepOne" resultMap="EmployeeAndDepartmentByStepResultMap">
+        select * from t_emp where eid=#{eid};
+    </select>
 ```
 #### 2. 查询部门信息
 ```java
-//DeptMapper里的方法
-/**
- * 通过分步查询，员工及所对应的部门信息
- * 分步查询第二步：通过did查询员工对应的部门信息
- * @param
- * @return com.atguigu.mybatis.pojo.Emp
- * @date 2022/2/27 20:23
- */
-Dept getEmpAndDeptByStepTwo(@Param("did") Integer did);
+DepartmentMapper.java文件    
+	/**
+     * 分步查询第二步：通过员工关联的did查询部门信息
+     * 设不设置返回值都无所谓，因为属性赋值是根据get和set方法来的
+     */
+    DepartmentMapper getDepartmentById(@Param("did") Integer did);
 ```
 ```xml
-<!--此处的resultMap仅是处理字段和属性的映射关系-->
-<resultMap id="EmpAndDeptByStepTwoResultMap" type="Dept">
-	<id property="did" column="did"></id>
-	<result property="deptName" column="dept_name"></result>
-</resultMap>
-<!--Dept getEmpAndDeptByStepTwo(@Param("did") Integer did);-->
-<select id="getEmpAndDeptByStepTwo" resultMap="EmpAndDeptByStepTwoResultMap">
-	select * from t_dept where did = #{did}
-</select>
+    <!--
+        分步查询第二步：通过员工关联的did查询部门信息
+        DepartmentMapper getDepartmentById(@Param("did") Integer did);
+    -->
+    <resultMap id="DeptResultMap" type="com.ly.mybatis.pojo.Department">
+        <id property="did" column="did" />
+        <result property="deptName" column="dept_name" />
+    </resultMap>
+    <select id="getDepartmentById" resultMap="DeptResultMap">
+        select * from t_dept where did = #{did};
+    </select>
 ```
-## 一对多映射处理
+***分布查询的好处：***实现了延迟加载（需要配置settings中开启）。
+
+> 延迟加载就是对于分步查询，你实际使用到哪个信息他才会执行其对于sql。
+>
+> 比如我输出员工的名字，开启延迟加载后只会执行 ` select * from t_emp where eid=#{eid};`语句，直到你使用了其关联的部门信息，他才会执行 `select * from t_dept where did = #{did};`
+>
+> 实际结果如图：
+>
+> ![](Resources/不开启延迟加载.png)
+>
+> ![](resources/开启延迟加载.png)
+
+## 3、一对多映射处理
+
+==实体类Bean处理一对多关系（表示当前这个试题类为一），则通过属性集合List<多的类型>==
+
 ```java
-public class Dept {
+public class Department {
     private Integer did;
     private String deptName;
-    private List<Emp> emps;
+    private List<Employee> employeeList;
 	//...构造器、get、set方法等
 }
 ```
-### collection
+### 3.1、collection标签
 - collection：用来处理一对多的映射关系
 - ofType：表示该属性对饮的集合中存储的数据的类型
 ```xml
-<resultMap id="DeptAndEmpResultMap" type="Dept">
-	<id property="did" column="did"></id>
-	<result property="deptName" column="dept_name"></result>
-	<collection property="emps" ofType="Emp">
-		<id property="eid" column="eid"></id>
-		<result property="empName" column="emp_name"></result>
-		<result property="age" column="age"></result>
-		<result property="sex" column="sex"></result>
-		<result property="email" column="email"></result>
-	</collection>
-</resultMap>
-<!--Dept getDeptAndEmp(@Param("did") Integer did);-->
-<select id="getDeptAndEmp" resultMap="DeptAndEmpResultMap">
-	select * from t_dept left join t_emp on t_dept.did = t_emp.did where t_dept.did = #{did}
-</select>
+    <!--
+        多对一： 使用collection标签
+            Department getDepartmentAndEmployeeById(@Param("did") Integer did);
+    -->
+    <resultMap id="DepartmentAndEmployeeResultMap" type="Department">
+        <id property="did" column="did" />
+        <result property="deptName" column="dept_name" />
+        <!-- collection专门用来处理一对多的集合属性
+            property表示的就是集合属性的名称
+            ofType表示的就是集合属性存储的 数据的类型，(如果起了别名直接写别名即可)-->
+        <collection property="employeeList" ofType="com.ly.mybatis.pojo.Employee">
+            <id property="eid" column="eid" />
+            <result property="empName" column="emp_name" />
+            <result property="age" column="age"></result>
+            <result property="sex" column="sex"></result>
+            <result property="email" column="email"></result>
+            <!-- 其中的多对一属性Department department可以不用写了-->
+        </collection>
+    </resultMap>
+    <select id="getDepartmentAndEmployeeById" resultMap="DepartmentAndEmployeeResultMap">
+        select * from t_dept left join t_emp on t_dept.did =t_emp.did where t_dept.did = #{did};
+    </select>
 ```
-### 分步查询
+### 3.2、分步查询
 ####  1. 查询部门信息
 ```java
-/**
- * 通过分步查询，查询部门及对应的所有员工信息
- * 分步查询第一步：查询部门信息
- * @param did 
- * @return com.atguigu.mybatis.pojo.Dept
- * @date 2022/2/27 22:04
- */
-Dept getDeptAndEmpByStepOne(@Param("did") Integer did);
+ DepartmentMapper.java文件 --第一步
+	/**
+     * 一对多经典案例：
+     * 根据id查询部门信息，并且获取该部门下所有员工信息
+     * 解决方法：分步查询
+     */
+    Department getDepartmentAndEmployeeByStepOne(@Param("did") Integer did);
 ```
 ```xml
-<resultMap id="DeptAndEmpByStepOneResultMap" type="Dept">
-	<id property="did" column="did"></id>
-	<result property="deptName" column="dept_name"></result>
-	<collection property="emps"
-				select="com.atguigu.mybatis.mapper.EmpMapper.getDeptAndEmpByStepTwo"
-				column="did"></collection>
-</resultMap>
-<!--Dept getDeptAndEmpByStepOne(@Param("did") Integer did);-->
-<select id="getDeptAndEmpByStepOne" resultMap="DeptAndEmpByStepOneResultMap">
-	select * from t_dept where did = #{did}
-</select>
+DepartmentMapper.xml文件  --第一步
+	<!--
+        分步查询第一步：先查询出部门信息
+        Department getDepartmentAndEmployeeByStepOne(@Param("did") Integer did);
+        -->
+    <resultMap id="DepartmentAndEmployeeByStepOneResultMap" type="Department">
+        <id property="did" column="did"/>
+        <result property="deptName" column="dept_name" />
+        <!-- 分步查询借助的就是 association标签
+            property属性：一对多的集合属性名
+            select属性：子查询的mapper文件对应的接口
+            column属性：二次查询，接口的参数
+            ofType属性：表示一对多集合属性中存放数据的类型（如果起了别名就是类名，否则就是全类名）
+            fetchType属性：lazy表示开启懒加载/延时加载
+            -->
+        <collection property="employeeList"
+                     select="com.ly.mybatis.mapper.EmployeeMapper.getDepartmentAndEmployeeByStepTwo"
+                     ofType="Employee"
+                     column="did"
+                     fetchType="lazy" />
+    </resultMap>
+    <select id="getDepartmentAndEmployeeByStepOne" resultMap="DepartmentAndEmployeeByStepOneResultMap">
+        select * from t_dept where did = #{did};
+    </select>
 ```
+```java
+EmployeeMapper.java文件  --第二步    
+	/**
+     * 一对多分步查询第二步：根据部门id查找员工信息
+     */
+    List<Employee> getDepartmentAndEmployeeByStepTwo(@Param("did") Integer did);
+```
+
+```xml
+EmployeeMapper.xml文件  --第二步
+    <!--
+        一对多分步查询第二步：根据部门id查找员工信息
+        List<Employee> getDepartmentAndEmployeeByStepTwo(@Param("did") Integer did);
+    -->
+    <resultMap id="AllEmployeeResultMap" type="Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+    </resultMap>
+    <select id="getDepartmentAndEmployeeByStepTwo" resultMap="AllEmployeeResultMap" >
+        select * from t_emp where did = #{did};
+    </select>
+```
+
 #### 2. 根据部门id查询部门中的所有员工
+
 ```java
 /**
  * 通过分步查询，查询部门及对应的所有员工信息
@@ -1114,11 +1240,20 @@ List<Emp> getDeptAndEmpByStepTwo(@Param("did") Integer did);
 	select * from t_emp where did = #{did}
 </select>
 ```
-## 延迟加载
-- 分步查询的优点：可以实现延迟加载，但是必须在核心配置文件中设置全局配置信息：
-	- lazyLoadingEnabled：延迟加载的全局开关。当开启时，所有关联对象都会延迟加载  
-	- aggressiveLazyLoading：当开启时，任何方法的调用都会加载该对象的所有属性。 否则，每个属性会按需加载  
-- 此时就可以实现按需加载，获取的数据是什么，就只会执行相应的sql。此时可通过association和collection中的fetchType属性设置当前的分步查询是否使用延迟加载，fetchType="lazy(延迟加载)|eager(立即加载)"
+## 4、延迟加载
+
+==注意：==
+
++ ==延迟加载仅在分步查询中使用（一对多collection标签，多对一association标签）==
++ ==如果全局配置没开启延迟加载，但是在分布查询使用fetchType=true（fetchType只在collection或association标签中才有）表示针对本次分步查询开启延迟加载==
+
+分步查询的优点：可以实现延迟加载，但是必须在核心配置文件中设置全局配置信息：
+- lazyLoadingEnabled：延迟加载的全局开关。当开启时，所有关联对象都会延迟加载  
+- aggressiveLazyLoading：当开启时，任何方法的调用都会加载该对象的所有属性。 否则，每个属性会按需加载  
+
+- 此时就可以实现按需加载，获取的数据是什么，就只会执行相应的sql。
+- `但是开启延迟加载的话，会对所有的分布查询生效，但是某些查询不需要延迟加载则此时可通过association和collection中的fetchType属性设置当前的分步查询是否使用延迟加载，fetchType="lazy(延迟加载)|eager(立即加载)"`
+
 ```xml
 <settings>
 	<!--开启延迟加载-->

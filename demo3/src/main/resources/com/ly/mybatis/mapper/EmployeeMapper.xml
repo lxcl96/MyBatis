@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名-->
+<mapper namespace="com.ly.mybatis.mapper.EmployeeMapper">
+
+    <!-- 建立实体bean属性property 和列字段值column的映射关系-->
+    <!-- type直接写Employee就行，因为mybatis配置文件中已经起了别名
+         type表示要将哪个类型bean进行映射-->
+    <resultMap id="empResultMap" type="com.ly.mybatis.pojo.Employee">
+        <!-- 设置主键映射关系  property表示实体bean的属性   column表示sql的列字段 id不能重复-->
+        <id property="eid" column="eid" />
+
+        <!-- result表示设置普通字段的映射关系-->
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+    </resultMap>
+
+    <!-- List<Map<String,Object>> getAllEmployee();-->
+    <select id="getAllEmployeeOld" resultType="Employee">
+        <!-- select * from t_emp; -->
+        <!-- 解决方法1：给不一致的字段取别名，别名和bena对象的属性值相同即可-->
+        <!--select eid,emp_name empName,age,email,did from t_emp; -->
+
+        <!-- 解决方法2：全局变量中开启下画线自动转驼峰风格，仅此而已如：emp_name自动转化为empName-->
+        <!-- 解决方法3：使用结果集映射，resultMap将字段映射成自定义属性-->
+        select * from t_emp;
+    </select>
+
+    <!-- 解决方法3：使用结果集映射，resultMap将字段映射成自定义属性-->
+    <select id="getAllEmployee" resultMap="empResultMap">
+        select * from t_emp;
+    </select>
+
+
+    <!-- 解决多对一映射除磷：
+            方式1、级联赋值  对部门属性的属性挨个赋值-->
+    <resultMap id="EmployeeAndDepartmentResultMap" type="com.ly.mybatis.pojo.Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+        <result property="department.did" column="did"></result>
+        <result property="department.deptName" column="dept_name"></result>
+    </resultMap>
+
+
+    <!-- 解决多对一映射除磷：
+            方式2、使用专门的association标签 此标签专门用来处理多对一的问题-->
+    <resultMap id="EmployeeAndDepartmentResultMapTwo" type="com.ly.mybatis.pojo.Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+        <association property="department" javaType="com.ly.mybatis.pojo.Department">
+            <id property="did" column="did" />
+            <result property="deptName" column="dept_name" />
+        </association>
+    </resultMap>
+
+    <!-- Employee getEmployeeAndDepartmentById(@Param("id") Integer id);-->
+    <select id="getEmployeeAndDepartmentById" resultMap="EmployeeAndDepartmentResultMapTwo">
+        SELECT * FROM t_emp LEFT JOIN t_dept ON t_emp.did = t_dept.did WHERE t_emp.eid = #{eid};
+    </select>
+
+
+
+    <!--
+        分步查询：
+            第一步    Employee getEmployeeAndDepartmentByIdStepOne(@Param("eid") Integer eid);
+            第二步    借助association嵌套子查询
+    -->
+    <resultMap id="EmployeeAndDepartmentByStepResultMap" type="com.ly.mybatis.pojo.Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+        <!-- select就是子查询，但是这个是Java所有就调用接口的全类名，column就是接口的参数-->
+        <association property="department"
+                     select="com.ly.mybatis.mapper.DepartmentMapper.getDepartmentById"
+                     column="did" />
+    </resultMap>
+
+    <select id="getEmployeeAndDepartmentByIdStepOne" resultMap="EmployeeAndDepartmentByStepResultMap">
+        select * from t_emp where eid=#{eid};
+    </select>
+
+
+
+    <!--
+        一对多分步查询第二步：根据部门id查找员工信息
+        List<Employee> getDepartmentAndEmployeeByStepTwo(@Param("did") Integer did);
+    -->
+    <resultMap id="AllEmployeeResultMap" type="Employee">
+        <id property="eid" column="eid" />
+        <result property="empName" column="emp_name" />
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="email" column="email"></result>
+    </resultMap>
+    <select id="getDepartmentAndEmployeeByStepTwo" resultMap="AllEmployeeResultMap" >
+        select * from t_emp where did = #{did};
+    </select>
+</mapper>

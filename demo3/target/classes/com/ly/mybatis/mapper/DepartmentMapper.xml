@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名-->
+<mapper namespace="com.ly.mybatis.mapper.DepartmentMapper">
+
+    <!--
+        分步查询第二步：通过员工关联的did查询部门信息
+        DepartmentMapper getDepartmentById(@Param("did") Integer did);
+    -->
+    <resultMap id="DeptResultMap" type="com.ly.mybatis.pojo.Department">
+        <id property="did" column="did" />
+        <result property="deptName" column="dept_name" />
+    </resultMap>
+    <select id="getDepartmentById" resultMap="DeptResultMap">
+        select * from t_dept where did = #{did};
+    </select>
+
+
+
+    <!--
+        多对一： 使用collection标签
+            Department getDepartmentAndEmployeeById(@Param("did") Integer did);
+    -->
+    <resultMap id="DepartmentAndEmployeeResultMap" type="Department">
+        <id property="did" column="did" />
+        <result property="deptName" column="dept_name" />
+        <!-- collection专门用来处理一对多的集合属性
+            property表示的就是集合属性的名称
+            ofType表示的就是集合属性存储的 数据的类型，(如果起了别名直接写别名即可)-->
+        <collection property="employeeList" ofType="com.ly.mybatis.pojo.Employee">
+            <id property="eid" column="eid" />
+            <result property="empName" column="emp_name" />
+            <result property="age" column="age"></result>
+            <result property="sex" column="sex"></result>
+            <result property="email" column="email"></result>
+        </collection>
+    </resultMap>
+    <select id="getDepartmentAndEmployeeById" resultMap="DepartmentAndEmployeeResultMap">
+        select * from t_dept left join t_emp on t_dept.did =t_emp.did where t_dept.did = #{did};
+    </select>
+
+
+
+
+    <!--
+        分步查询第一步：先查询出部门信息
+        Department getDepartmentAndEmployeeByStepOne(@Param("did") Integer did);
+        -->
+    <resultMap id="DepartmentAndEmployeeByStepOneResultMap" type="Department">
+        <id property="did" column="did"/>
+        <result property="deptName" column="dept_name" />
+        <!-- 分步查询借助的就是 association标签
+            property属性：
+            select属性：
+            column属性：二次查询，接口的参数
+            javaType属性：
+            fetchType属性：
+            -->
+        <collection property="employeeList"
+                     select="com.ly.mybatis.mapper.EmployeeMapper.getDepartmentAndEmployeeByStepTwo"
+                     ofType="Employee"
+                     column="did"
+                     fetchType="lazy" />
+    </resultMap>
+    <select id="getDepartmentAndEmployeeByStepOne" resultMap="DepartmentAndEmployeeByStepOneResultMap">
+        select * from t_dept where did = #{did};
+    </select>
+
+</mapper>
