@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--指定指定实现接口 即：接口的全类名-->
+<mapper namespace="com.ly.mybatis.mapper.CacheMapper">
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache" readOnly="false"/>
+    <!--
+         Employee getEmployeeById(@Param("eid")Integer eid);
+    -->
+    <select id="getEmployeeById" resultType="Employee">
+        select * from t_emp where eid=#{eid};
+    </select>
+
+    <!-- int insertOne(Department department);-->
+    <insert id="insertOne">
+        insert into t_dept values(null,'后勤部')
+    </insert>
+</mapper>

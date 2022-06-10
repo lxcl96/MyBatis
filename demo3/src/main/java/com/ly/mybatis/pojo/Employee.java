@@ -1,12 +1,14 @@
 package com.ly.mybatis.pojo;
 
+import java.io.Serializable;
+
 /**
  * @FileName:Employee.class
  * @Author:ly
  * @Date:2022/6/9
  * @Description:
  */
-public class Employee {
+public class Employee implements Serializable {
     private Integer eid;
     private String empName;
     private Integer age;

@@ -1,15 +1,19 @@
 package com.ly.mybatis.test;
 
 import com.ly.mybatis.mapper.DepartmentMapper;
+import com.ly.mybatis.mapper.DynamicSQLMapper;
 import com.ly.mybatis.mapper.EmployeeMapper;
 import com.ly.mybatis.pojo.Department;
 import com.ly.mybatis.pojo.Employee;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -79,5 +83,63 @@ public class MyTest {
         DepartmentMapper departmentMapper = sqlSession.getMapper(DepartmentMapper.class);
         Department department = departmentMapper.getDepartmentAndEmployeeByStepOne(1);
         System.out.println(department.getDeptName());
+    }
+
+
+    /**
+     * 动态SQL之 if
+     */
+    @Test
+    public void getEmployeeByMultiCondition() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        Employee employee = new Employee(null, "张三", 32, '男', "zs@test.com");
+        Employee employee1 = new Employee(null, "张三", 32, ' ', null);
+        List<Employee> employeeList = mapper.getEmployeeByMultiCondition(employee1);
+        employeeList.forEach(emp -> System.out.println(emp));
+    }
+
+    /**
+     * choose，when，otherwise
+     */
+    @Test
+    public void getEmployeeByChoose() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        Employee employee = new Employee(null, "张三", 32, '男', "zs@test.com");
+        Employee employee1 = new Employee(null, null, null, ' ', null);
+        List<Employee> employeeList = mapper.getEmployeeByChoose(employee1);
+        employeeList.forEach(emp -> System.out.println(emp));
+    }
+
+
+    /**
+     * 通过数组实现批量 删除
+     */
+    @Test
+    public void deleteMoreByArray() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        int ret = mapper.deleteMoreByArray(new Integer[]{1, 2, 3, 4});
+        System.out.println(ret);
+        sqlSession.commit();
+    }
+
+    /**
+     * 通过List集合实现批量 添加
+     */
+    @Test
+    public void insertMoreByList() throws IOException {
+        List<Employee> employeeList = new ArrayList<>();
+        employeeList.add(new Employee(1, "张三", 32, '男', "zs@test.com"));
+        employeeList.add(new Employee(2, "李四", 28, '女', "ls@test.com"));
+        employeeList.add(new Employee(3, "王五", 30, '男', "ww@test.com"));
+        employeeList.add(new Employee(4, "赵六", 27, '男', "zl@test.com"));
+
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        int ret = mapper.insertMoreByList(employeeList);
+        System.out.println(ret);
+        sqlSession.commit();
     }
 }

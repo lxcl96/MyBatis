@@ -1299,9 +1299,19 @@ public void getEmpAndDeptByStepOne() {
 					 fetchType="lazy"></association>
 	</resultMap>
 	```
-# 动态SQL
+
+# 十、动态SQL
 - Mybatis框架的动态SQL技术是一种根据特定条件动态拼装SQL语句的功能，它存在的意义是为了解决拼接SQL语句字符串时的痛点问题
-## if
+
+> 例如：员工查询，可以写关建字eid,age,sex `select * from t_emp where eid=? and age=? and sex=?`
+>
+> 如果前端没有传输sex则需要 `select * from t_emp where eid=? and age=?`
+>
+> …
+>
+> 如果前端一个参数都没有，默认就是查询所所有员工  `select * from t_emp `，动态sql的意义，去掉where 后面语句，如果每个情况都单独写一个sql的mapper文件，太离谱了！
+
+## 1、if
 - if标签可通过test属性（即传递过来的数据）的表达式进行判断，若表达式的结果为true，则标签中的内容会执行；反之标签中的内容不会执行
 - 在where后面添加一个恒成立条件`1=1`
 	- 这个恒成立条件并不会影响查询的结果
@@ -1309,58 +1319,70 @@ public void getEmpAndDeptByStepOne() {
 		- 如果不加上恒成立条件，则SQL语句为`select * from t_emp where and age = ? and sex = ? and email = ?`，此时`where`会与`and`连用，SQL语句会报错
 		- 如果加上一个恒成立条件，则SQL语句为`select * from t_emp where 1= 1 and age = ? and sex = ? and email = ?`，此时不报错
 ```xml
-<!--List<Emp> getEmpByCondition(Emp emp);-->
-<select id="getEmpByCondition" resultType="Emp">
-	select * from t_emp where 1=1
-	<if test="empName != null and empName !=''">
-		and emp_name = #{empName}
-	</if>
-	<if test="age != null and age !=''">
-		and age = #{age}
-	</if>
-	<if test="sex != null and sex !=''">
-		and sex = #{sex}
-	</if>
-	<if test="email != null and email !=''">
-		and email = #{email}
-	</if>
-</select>
+    <!--
+     * 多条件查询:员工姓名，性别，年龄，电子邮箱
+    List<Employee> getEmployeeByMultiCondition(Employee employee);
+    -->
+    <select id="getEmployeeByMultiCondition" resultType="Employee">
+        select * from t_emp where 1=1 <!-- 解决了 where关建字多出来，也解决了empName为空时，多个and的情况-->
+        <!-- test表示sql查询条件，实际sql是哪个就写哪个（不需要#{}，直接写resultType中的属性名即可）
+            java和sql的杂交，不能用&& 只能用and
+            标签中的值就表示，满足if的test条件，才会把其拼接到sql中(sql关建字and where等要自己写 ，注意写在哪里)
+        -->
+
+        <if test="empName != null and empName != ''"> <!-- 这个是Java属性-->
+            and emp_name = #{empName} <!-- 这个是sql，所有是sql字段-->
+        </if>
+
+        <if test="sex != null and sex !=' '">
+            and sex = #{sex}
+        </if>
+        <if test="age != null and age !=''">
+            and age = #{age}
+        </if>
+        <if test="email != null and email !=''">
+            and email = #{email}
+        </if>
+    </select>
 ```
-## where
+## 2、where
 - where和if一般结合使用：
 	- 若where标签中的if条件都不满足，则where标签没有任何功能，即不会添加where关键字  
-	- 若where标签中的if条件满足，则where标签会自动添加where关键字，并将条件最前方多余的and/or去掉  
+	- 若where标签中的if条件满足，则where标签会自动添加where关键字，==并将条件最前方多余的and/or去掉==
 ```xml
-<!--List<Emp> getEmpByCondition(Emp emp);-->
-<select id="getEmpByCondition" resultType="Emp">
-	select * from t_emp
-	<where>
-		<if test="empName != null and empName !=''">
-			emp_name = #{empName}
-		</if>
-		<if test="age != null and age !=''">
-			and age = #{age}
-		</if>
-		<if test="sex != null and sex !=''">
-			and sex = #{sex}
-		</if>
-		<if test="email != null and email !=''">
-			and email = #{email}
-		</if>
-	</where>
-</select>
+    <select id="getEmployeeByMultiCondition" resultType="Employee">
+        select * from t_emp
+        <where>
+            <!-- 条件都不成立，不现实where；有一个成立，自动字段去掉最前面的and-->
+            <if test="empName != null and empName != ''"> <!-- 这个是Java属性-->
+                and emp_name = #{empName} <!-- 这个是sql，所有是sql字段-->
+            </if>
+
+            <if test="sex != null and sex !=' '">
+                and sex = #{sex}
+            </if>
+            <if test="age != null and age !=''">
+                and age = #{age}
+            </if>
+            <if test="email != null and email !=''">
+                and email = #{email}
+            </if>
+        </where>
+
+    </select>
 ```
-- 注意：where标签不能去掉条件后多余的and/or
+- ==注意：where标签不能去掉条件后多余的and/or==
+	
 	```xml
 	<!--这种用法是错误的，只能去掉条件前面的and/or，条件后面的不行-->
 	<if test="empName != null and empName !=''">
-	emp_name = #{empName} and
+	emp_name = #{empName} and <!-- 不会自动去掉-->
 	</if>
 	<if test="age != null and age !=''">
-		age = #{age}
+		age = #{age} or
 	</if>
 	```
-## trim
+## 3、trim
 - trim用于去掉或添加标签中的内容  
 - 常用属性
 	- prefix：在trim标签中的内容的前面添加某些内容  
@@ -1369,130 +1391,262 @@ public void getEmpAndDeptByStepOne() {
 	- suffixOverrides：在trim标签中的内容的后面去掉某些内容
 - 若trim中的标签都不满足条件，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
 ```xml
-<!--List<Emp> getEmpByCondition(Emp emp);-->
-<select id="getEmpByCondition" resultType="Emp">
-	select * from t_emp
-	<trim prefix="where" suffixOverrides="and|or">
-		<if test="empName != null and empName !=''">
-			emp_name = #{empName} and
-		</if>
-		<if test="age != null and age !=''">
-			age = #{age} and
-		</if>
-		<if test="sex != null and sex !=''">
-			sex = #{sex} or
-		</if>
-		<if test="email != null and email !=''">
-			email = #{email}
-		</if>
-	</trim>
-</select>
+    <!--
+     * 多条件查询:员工姓名，性别，年龄，电子邮箱
+    List<Employee> getEmployeeByMultiCondition(Employee employee);
+    -->
+    <select id="getEmployeeByMultiCondition" resultType="Employee">
+        select * from t_emp
+        <!--
+            prefix属性：表示如果内部有条件成立，在最开始加上 prefix的关建字 【如：where】
+            prefixOverrides属性： 表示如果内部有条件成立，则删除==最开始==的关建字【如：and或or】
+            suffix属性：表示如果内部有条件成立，在最后面加上 suffix的关建字 【如：;分号】
+            suffixOverrides属性： 表示如果内部有条件成立，则删除==最后的==关建字【如：and或or】
+        -->
+        <trim prefix="where" prefixOverrides="and" suffix=";" suffixOverrides="and|or">
+            <if test="empName != null and empName != ''">
+                 and emp_name = #{empName} and
+            </if>
+
+            <if test="sex != null and sex !=' '">
+                 sex = #{sex} and
+            </if>
+            <if test="age != null and age !=''">
+                 age = #{age} or
+            </if>
+            <if test="email != null and email !=''">
+                 email = #{email} and
+            </if>
+        </trim>
+
+    </select>
 ```
-```java
-//测试类
-@Test
-public void getEmpByCondition() {
-	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-	DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-	List<Emp> emps= mapper.getEmpByCondition(new Emp(null, "张三", null, null, null, null));
-	System.out.println(emps);
-}
-```
-![](Resources/trim测试结果.png)
-## choose、when、otherwise
-- `choose、when、otherwise`相当于`if...else if..else`
+## 4、choose、when、otherwise 一组标签
+- `choose、when、otherwise`相当于`if...else if..else ` 一一对应！
 - when至少要有一个，otherwise至多只有一个
 ```xml
-<select id="getEmpByChoose" resultType="Emp">
-	select * from t_emp
-	<where>
-		<choose>
-			<when test="empName != null and empName != ''">
-				emp_name = #{empName}
-			</when>
-			<when test="age != null and age != ''">
-				age = #{age}
-			</when>
-			<when test="sex != null and sex != ''">
-				sex = #{sex}
-			</when>
-			<when test="email != null and email != ''">
-				email = #{email}
-			</when>
-			<otherwise>
-				did = 1
-			</otherwise>
-		</choose>
-	</where>
-</select>
+    <!--
+     * 测试choose，when，otherwise
+    List<Employee> getEmployeeByChoose(Employee employee);
+    -->
+    <select id="getEmployeeByChoose" resultType="Employee">
+        select * from t_emp
+        <where>
+            <!--choose是父标签 ，一组choose 就表示完整的if..else if...else-->
+            <choose>
+                <!-- 有一个满足条件，其它的就不会执行了 。所以不用加and-->
+                <when test="empName != null and empName != ''"> <!-- if-->
+                    emp_name = #{empName}
+                </when>
+                <when test="sex != null and sex !=' '">  <!-- else if-->
+                    sex = #{sex}
+                </when>
+                <when test="age != null and age !=''"> <!-- else if-->
+                    age = #{age}
+                </when>
+                <when test="email != null and email !=''"> <!-- else if-->
+                    email = #{email}
+                </when>
+                <otherwise> <!-- else-->
+                    did = 1
+                </otherwise>
+            </choose>
+
+        </where>
+    </select>
 ```
 ```java
-@Test
-public void getEmpByChoose() {
-	SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-	DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-	List<Emp> emps = mapper.getEmpByChoose(new Emp(null, "张三", 23, "男", "123@qq.com", null));
-	System.out.println(emps);
-}
+    /**
+     * choose，when，otherwise
+     */
+    @Test
+    public void getEmployeeByChoose() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        Employee employee = new Employee(null, "张三", 32, '男', "zs@test.com");
+        Employee employee1 = new Employee(null, null, null, ' ', null);
+        List<Employee> employeeList = mapper.getEmployeeByChoose(employee1);
+        employeeList.forEach(emp -> System.out.println(emp));
+    }
 ```
 ![](Resources/choose测试结果.png)
 - 相当于`if a else if b else if c else d`，只会执行其中一个
-## foreach
-- 属性：  
-	- collection：设置要循环的数组或集合  
-	- item：表示集合或数组中的每一个数据  
-	- separator：设置循环体之间的分隔符，分隔符前后默认有一个空格，如` , `
-	- open：设置foreach标签中的内容的开始符  
-	- close：设置foreach标签中的内容的结束符
-- 批量删除
-	```xml
-	<!--int deleteMoreByArray(Integer[] eids);-->
-	<delete id="deleteMoreByArray">
-		delete from t_emp where eid in
-		<foreach collection="eids" item="eid" separator="," open="(" close=")">
-			#{eid}
-		</foreach>
-	</delete>
-	```
-	```java
-	@Test
-	public void deleteMoreByArray() {
-		SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-		DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-		int result = mapper.deleteMoreByArray(new Integer[]{6, 7, 8, 9});
-		System.out.println(result);
-	}
-	```
-	![](Resources/foreach测试结果1.png)
-- 批量添加
-	```xml
-	<!--int insertMoreByList(@Param("emps") List<Emp> emps);-->
-	<insert id="insertMoreByList">
-		insert into t_emp values
-		<foreach collection="emps" item="emp" separator=",">
-			(null,#{emp.empName},#{emp.age},#{emp.sex},#{emp.email},null)
-		</foreach>
-	</insert>
-	```
-	```java
-	@Test
-	public void insertMoreByList() {
-		SqlSession sqlSession = SqlSessionUtils.getSqlSession();
-		DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
-		Emp emp1 = new Emp(null,"a",1,"男","123@321.com",null);
-		Emp emp2 = new Emp(null,"b",1,"男","123@321.com",null);
-		Emp emp3 = new Emp(null,"c",1,"男","123@321.com",null);
-		List<Emp> emps = Arrays.asList(emp1, emp2, emp3);
-		int result = mapper.insertMoreByList(emps);
-		System.out.println(result);
-	}
-	```
-	![](Resources/foreach测试结果2.png)
-## SQL片段
+
+## 5、foreach
+### 5.1、属性：  
+
+- collection：设置要循环的数组或集合  
+- item：表示集合或数组中的每一个数据  
+- separator：设置循环体之间的分隔符，分隔符前后默认有一个空格，如` , `
+- open：设置foreach标签中的内容的开始符  
+- close：设置foreach标签中的内容的结束符
+
+### 5.2、批量删除
+
+#### 5.2.1、使用 in
+
+```xml
+  <!--
+     * 通过数组实现批量 删除 in方法
+    int deleteMoreByArray(@Param("eids")Integer[] eids);
+    -->
+    <delete id="deleteMoreByArray">
+        <!-- 目标delete  from t_emp where eid in (1,2,3,4) 所以foreach必须放在小括号(中-->
+        delete  from t_emp where eid in (
+        <!--
+            collection属性：表示要遍历的集合/数组，参数传递过来的eids 直接用不用加#{}或${}
+            item属性：表示数组中的元素,类似于增强for （自己起的别名）
+            separator属性：表示数组中的每个元素间的分隔符（最后一个，和最开始没有 放,刚刚好）
+            open属性：表示循环以什么符号开始  代替了手写 (
+            close属性：表示循环以什么符号结束  代替了手写 )
+        -->
+        <!-- 对于传递过来的参数，如果是放在sql中的则必须使用转义 ${}或#{}，但如果是放在mybatis的标签中的 直接用即可不需要加！-->
+        <foreach collection="eids" item="eid" separator="," close="" open="">
+            #{eid} <!-- 或者'${eid}'-->
+        </foreach>
+        )
+    </delete>
+
+```
+#### 5.2.2、使用 or
+
+```xml
+    <!--
+     * 通过数组实现批量 删除 or方法
+    int deleteMoreByArray(@Param("eids")Integer[] eids);
+    -->
+    <delete id="deleteMoreByArray">
+        <!-- 目标delete  from t_emp where eid in (1,2,3,4) 所以foreach必须放在小括号(中-->
+        delete  from t_emp where eid
+        <foreach collection="eids" separator="or eid=" open="=" close=";" item="eid">
+            #{eid} <!-- 或者eid = #{eid}-->
+        </foreach>
+
+    </delete>
+```
+
+```java
+ 	/**
+     * 通过数组实现批量 删除
+     */
+    @Test
+    public void deleteMoreByArray() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        int ret = mapper.deleteMoreByArray(new Integer[]{1, 2, 3, 4});
+        System.out.println(ret);
+        sqlSession.commit();
+    }
+```
+![](Resources/foreach测试结果1.png)
+
+![](resources\foreach-or.png)
+
+------
+
+### 5.3、批量添加 ==注意insert关建字的位置==
+
+#### 5.3.1、***我以为的MyBatis批量插入是：***
+
+```sql
+INSERT INTO `mybatis`.`t_emp` (`eid`, `emp_name`, `age`, `sex`, `email`, `did`) VALUES ('1', '张三', '32', '男', 'zs@test.com', '1');
+INSERT INTO `mybatis`.`t_emp` (`eid`, `emp_name`, `age`, `sex`, `email`, `did`) VALUES ('2', '李四', '28', '女', 'ls@test.com', '1');
+INSERT INTO `mybatis`.`t_emp` (`eid`, `emp_name`, `age`, `sex`, `email`, `did`) VALUES ('3', '王五', '30', '男', 'ww@test.com', '2');
+INSERT INTO `mybatis`.`t_emp` (`eid`, `emp_name`, `age`, `sex`, `email`, `did`) VALUES ('4', '赵六', '27', '男', 'zl@test.com', '3');
+
+```
+
+所以mapper文件中我写的错误代码如下：
+
+```xml
+<insert id="insertMoreByList">
+	<!-- insert 也放在foreach标签中-->
+    <foreach collection="employees" item="employee" separator=";">
+        insert into t_emp values(null ,#{employee.empName},#{employee.age},#{employee.sex},#{employee.email},null)
+    </foreach>
+</insert>
+```
+
+导致出现报错：
+
+```sh
+org.apache.ibatis.exceptions.PersistenceException: 
+### Error updating database.  Cause: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'insert into t_emp values(null ,'æ�Žå››',28,'å¥³','ls@test.com',null)
+         ; ' at line 3
+### The error may exist in com/ly/mybatis/mapper/DynamicSQLMapper.xml
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: insert into t_emp values(null ,?,?,?,?,null)          ;              insert into t_emp values(null ,?,?,?,?,null)          ;              insert into t_emp values(null ,?,?,?,?,null)          ;              insert into t_emp values(null ,?,?,?,?,null)
+### Cause: com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'insert into t_emp values(null ,'æ�Žå››',28,'å¥³','ls@test.com',null)
+         ; ' at line 3
+```
+
+解决方法：在配置数据库连接时，开启`allowMultiQueries=true`
+
+```properties
+jdbc.url=jdbc:mysql:///mybatis?useUnicode=true&allowMultiQueries=true&characterEncoding=utf-8
+```
+
+运行结果：
+
+***可以明显看到这样执行的坏处，把多个语句分开了，实现了多语句操作，但是返回影响的行数也变了，变成每一个sql单独的影响的行数，所以存在误差，不推荐这样用（[实际的MyBatis批量插入]()）***
+
+![image-20220610135509160](resources\foreach-insert-1.png)
+
+#### 5.3.2、***实际的MyBatis批量插入是：***
+
+整合成单条sql语句，用逗号分隔
+
+```sql
+INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', '李四', '28', '女', 'ls@test.com', '1'),('3', '王五', '30', '男', 'ww@test.com', '2'),('4', '赵六', '27', '男', 'zl@test.com', '3')
+```
+
+正确的mapper文件如下：
+
+```xml
+    <!--
+     * 通过List集合实现批量 添加
+    int insertMoreByList(@Param("employees") List<Employee> employees);
+    -->
+    <insert id="insertMoreByList">
+        <!-- insert写在foreach的外面，不参与循环。-->
+        insert into t_emp values
+        <foreach collection="employees" item="employee" separator=",">
+            (null ,#{employee.empName},#{employee.age},#{employee.sex},#{employee.email},null )
+        </foreach>
+    </insert>
+```
+```java
+    /**
+     * 通过List集合实现批量 添加
+     */
+    @Test
+    public void insertMoreByList() throws IOException {
+        List<Employee> employeeList = new ArrayList<>();
+        employeeList.add(new Employee(1, "张三", 32, '男', "zs@test.com"));
+        employeeList.add(new Employee(2, "李四", 28, '女', "ls@test.com"));
+        employeeList.add(new Employee(3, "王五", 30, '男', "ww@test.com"));
+        employeeList.add(new Employee(4, "赵六", 27, '男', "zl@test.com"));
+
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        DynamicSQLMapper mapper = sqlSession.getMapper(DynamicSQLMapper.class);
+        int ret = mapper.insertMoreByList(employeeList);
+        System.out.println(ret);
+        sqlSession.commit();
+    }
+}
+```
+![](Resources/foreach测试结果2.png)
+
+### 5.4、SQL片段
+
+***对于一些表中常用的字段，每次都要写字段名，比较麻烦。可以把这些字段名放到sql标签中，用的时候引入即可。***
+
 - sql片段，可以记录一段公共sql片段，在使用的地方通过include标签进行引入
 - 声明sql片段：`<sql>`标签
 ```xml
-<sql id="empColumns">eid,emp_name,age,sex,email</sql>
+    <!-- 注意，这里是数据库的列名（字段）-->
+    <sql id="empColumns">eid,emp_name,sex,age,email</sql>
 ```
 - 引用sql片段：`<include>`标签
 ```xml
@@ -1501,43 +1655,98 @@ public void getEmpByChoose() {
 	select <include refid="empColumns"></include> from t_emp
 </select>
 ```
-# MyBatis的缓存
-## MyBatis的一级缓存
-- 一级缓存是SqlSession级别的，通过同一个SqlSession查询的数据会被缓存，下次查询相同的数据，就会从缓存中直接获取，不会从数据库重新访问  
-- 使一级缓存失效的四种情况：  
-	1. 不同的SqlSession对应不同的一级缓存  
-	2. 同一个SqlSession但是查询条件不同
-	3. 同一个SqlSession两次查询期间执行了任何一次增删改操作
-	4. 同一个SqlSession两次查询期间手动清空了缓存
-## MyBatis的二级缓存
+# 十一、MyBatis的缓存
+
+缓存就是把当前查询到的数据进行记录，下次查找相同的数据就会从缓存中取，不会访问数据库重新获取了。
+
+缓存只针对查询功能！
+
+## 1、MyBatis的一级缓存 （默认开启）
+***一级缓存是SqlSession级别的，通过同一个SqlSession查询的数据会被缓存，下次查询相同的数据，就会从缓存中直接获取，不会从数据库重新访问***
+
+*使一级缓存失效的四种情况：*  
+
+1. `不同的SqlSession对应不同的一级缓存`  
+2. `同一个SqlSession但是查询条件不同`
+3. `同一个SqlSession两次查询期间执行了任何一次增删改操作（任意一张表，不局限同一个表）`
+4. `同一个SqlSession两次查询期间手动清空了缓存（sqlSession.clearCache();）`
+
+## 2、MyBatis的二级缓存
+
 - 二级缓存是SqlSessionFactory级别，通过同一个SqlSessionFactory创建的SqlSession查询的结果会被缓存；此后若再次执行相同的查询语句，结果就会从缓存中获取  
 - 二级缓存开启的条件
-	1. 在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置
-	2. 在映射文件中设置标签<cache />
-	3. 二级缓存必须在SqlSession关闭或提交之后有效
-	4. 查询的数据所转换的实体类类型必须实现序列化的接口
-- 使二级缓存失效的情况：两次查询之间执行了任意的增删改，会使一级和二级缓存同时失效
-## 二级缓存的相关配置
-- 在mapper配置文件中添加的cache标签可以设置一些属性
-- eviction属性：缓存回收策略  
-	- LRU（Least Recently Used） – 最近最少使用的：移除最长时间不被使用的对象。  
-	- FIFO（First in First out） – 先进先出：按对象进入缓存的顺序来移除它们。  
-	- SOFT – 软引用：移除基于垃圾回收器状态和软引用规则的对象。  
-	- WEAK – 弱引用：更积极地移除基于垃圾收集器状态和弱引用规则的对象。
-	- 默认的是 LRU
-- flushInterval属性：刷新间隔，单位毫秒
-	- 默认情况是不设置，也就是没有刷新间隔，缓存仅仅调用语句（增删改）时刷新
-- size属性：引用数目，正整数
-	- 代表缓存最多可以存储多少个对象，太大容易导致内存溢出
-- readOnly属性：只读，true/false
-	- true：只读缓存；会给所有调用者返回缓存对象的相同实例。因此这些对象不能被修改。这提供了很重要的性能优势。  
-	- false：读写缓存；会返回缓存对象的拷贝（通过序列化）。这会慢一些，但是安全，因此默认是false
-## MyBatis缓存查询的顺序
+	1. `在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置`
+	2. `在映射文件中设置标签<cache />`
+	3. `二级缓存必须在SqlSession关闭或提交之后有效（如果开了二级缓存，数据先保存在sqlSession中仅在前面的sqlSession.close()或SqlSession.commit()后才会保存在二级缓存中！）`
+	4. `查询的数据所转换的实体类类型必须实现序列化的接口`
+- ***使二级缓存失效的情况***：两次查询之间执行了任意的增删改，会使一级和二级缓存同时失效
+## 3、mapper文件中二级缓存的相关配置
+在mapper配置文件中添加的`cache标签`可以设置一些属性
+
++ `type属性：指定使用的缓存类型，不写默认是MyBatis的SqlSessionFactory`
+
+  ```xml
+  //配置第三次缓存插件的全类名
+  <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
+  ```
+
+- `eviction属性：缓存回收策略` 
+
+  - LRU（Least Recently Used） – 最近最少使用的：移除最长时间不被使用的对象。  
+  - FIFO（First in First out） – 先进先出：按对象进入缓存的顺序来移除它们。  
+  - SOFT – 软引用：移除基于垃圾回收器状态和软引用规则的对象。  
+  - WEAK – 弱引用：更积极地移除基于垃圾收集器状态和弱引用规则的对象。
+  - 默认的是 LRU
+
+- `flushInterval属性：刷新间隔，单位毫秒`
+
+  - 默认情况是不设置，也就是没有刷新间隔，缓存仅仅调用语句（增删改）时刷新
+
+- `size属性：引用数目，正整数`
+
+  - 代表缓存最多可以存储多少个对象，太大容易导致内存溢出
+
+- `readOnly属性：只读，true/false`
+
+  - true：只读缓存；会给所有调用者返回缓存对象的相同实例(`查到的数据直接返回，不是拷贝`)。因此这些对象不能被修改`【不能修改表示的是不建议修改，并不是不能修改.】`。这提供了很重要的性能优势。
+
+    ```java
+    @Test
+    public void testSecondCache() throws IOException {
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml"));
+        SqlSession session1 = sqlSessionFactory.openSession();
+        CacheMapper session1Mapper = session1.getMapper(CacheMapper.class);
+        Employee employee1 = session1Mapper.getEmployeeById(1);
+        System.out.println(employee1);
+        session1.commit();
+        System.out.println("分隔符 -------------------------------");
+        SqlSession session2 = sqlSessionFactory.openSession();
+        CacheMapper session2Mapper = session2.getMapper(CacheMapper.class);
+        Employee employee2 = session2Mapper.getEmployeeById(1);
+        System.out.println(employee2);
+        employee2.setEmpName("猪猪公主");//修改employee2为猪猪公主
+        System.out.println("分隔符 -------------------------------");
+        System.out.println(employee1); //readOnly="true" ，employee1也变成猪猪公主了
+    
+    }
+    ```
+
+      
+
+  - false：读写缓存；会返回缓存对象的拷贝（通过序列化）（`返回的是拷贝后的数据`）。这会慢一些，但是安全（`修改，不影响缓存中的查询数据`），因此默认是false
+
+`二级缓存是事务性的。这意味着，当 SqlSession 完成并提交时，或是完成并回滚，但没有执行 flushCache=true 的 insert/delete/update 语句时，缓存会获得更新。`
+
+## 4、MyBatis缓存查询的顺序
+
 - 先查询二级缓存，因为二级缓存中可能会有其他程序已经查出来的数据，可以拿来直接使用  
 - 如果二级缓存没有命中，再查询一级缓存  
 - 如果一级缓存也没有命中，则查询数据库  
 - SqlSession关闭之后，一级缓存中的数据会写入二级缓存
-## 整合第三方缓存EHCache（了解）
+## 5、整合第三方缓存EHCache代替二级缓存（了解）
+
+第三方缓存只能替代MyBatis的二级缓存，无法替代一级缓存！
+
 ### 添加依赖
 ```xml
 <!-- Mybatis EHCache整合包 -->
@@ -1562,12 +1771,15 @@ public void getEmpByChoose() {
 | logback-classic | 支持SLF4J门面接口的一个具体实现 |
 
 ### 创建EHCache的配置文件ehcache.xml
+
+用于指定缓存存放的位置以及相关配置
+
 - 名字必须叫`ehcache.xml`
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="../config/ehcache.xsd">
-    <!-- 磁盘保存路径 -->
+    <!-- 缓存数据，磁盘保存路径 -->
     <diskStore path="D:\atguigu\ehcache"/>
     <defaultCache
             maxElementsInMemory="1000"

@@ -53,11 +53,11 @@
         <id property="did" column="did"/>
         <result property="deptName" column="dept_name" />
         <!-- 分步查询借助的就是 association标签
-            property属性：
-            select属性：
+            property属性：一对多的集合属性名
+            select属性：子查询的mapper文件对应的接口
             column属性：二次查询，接口的参数
-            javaType属性：
-            fetchType属性：
+            ofType属性：表示一对多集合属性中存放数据的类型（如果起了别名就是类名，否则就是全类名）
+            fetchType属性：lazy表示开启懒加载/延时加载
             -->
         <collection property="employeeList"
                      select="com.ly.mybatis.mapper.EmployeeMapper.getDepartmentAndEmployeeByStepTwo"
