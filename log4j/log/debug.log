@@ -1,0 +1,6 @@
+DEBUG [Thread-99] 2022-06-11 20:59:53:972 this is a debug level! (MyLog.java:29)  
+ DEBUG [Thread-98] 2022-06-11 20:59:53:972 this is a debug level! (MyLog.java:29)  
+ DEBUG [Thread-95] 2022-06-11 20:59:53:972 this is a debug level! (MyLog.java:29)  
+ DEBUG [Thread-97] 2022-06-11 20:59:53:972 this is a debug level! (MyLog.java:29)  
+ DEBUG [Thread-96] 2022-06-11 20:59:53:971 this is a debug level! (MyLog.java:29)  
+ 
