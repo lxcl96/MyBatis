@@ -34,29 +34,30 @@
 ## 创建maven工程
 - 打包方式：jar
 - 引入依赖
-	```xml
-	<dependencies>
-		<!-- Mybatis核心 -->
-		<dependency>
-			<groupId>org.mybatis</groupId>
-			<artifactId>mybatis</artifactId>
-			<version>3.5.7</version>
+
+```xml
+<dependencies>
+	<!-- Mybatis核心 -->
+	<dependency>
+		<groupId>org.mybatis</groupId>
+		<artifactId>mybatis</artifactId>
+		<version>3.5.7</version>
+	</dependency>
+	<!-- junit测试 -->
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.12</version>
+		<scope>test</scope>
+	</dependency>
+	<!-- MySQL驱动 -->
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>5.1.3</version>
 		</dependency>
-		<!-- junit测试 -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- MySQL驱动 -->
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.3</version>
-			</dependency>
-	</dependencies>
-	```
+</dependencies>
+```
 ## 创建MyBatis的核心配置文件
 >习惯上命名为`mybatis-config.xml`，这个文件名仅仅只是建议，并非强制要求。将来整合Spring之后，这个配置文件可以省略，所以大家操作时可以直接复制、粘贴。
 >核心配置文件主要用于配置连接数据库的环境以及MyBatis的全局配置信息
@@ -362,7 +363,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 	```
 4. 查询一个实体类对象
 	```xml
-  <!-- 查询功能必须设置resulType/resultMap 表示结果类型，mybatis会将查询到的结果转化成这个类型，然后再转化为对应函数selectOneBean()的返回值返回
+    <!-- 查询功能必须设置resulType/resultMap 表示结果类型，mybatis会将查询到的结果转化成这个类型，然后再转化为对应函数selectOneBean()的返回值返回
 	        resultType（结果类型）：全类名（设置默认的映射关系，属性名一致则赋值否则不赋值） 【用于一行多列，或多行多列,或单行单列，或多行单列】
 	        resultMap（结果映射）：（设置自定义的映射关系，即sql字段名和java属性名不一致时） 【用于一行多列，或多行多列,或单行单列，或多行单列】
 	    -->
@@ -380,6 +381,7 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 	    </select>
 	```
 - 注意：
+
 	1. 查询的标签select必须设置属性resultType或resultMap，用于设置实体类和数据库表的映射关系  
 		- resultType：自动映射，用于属性名和表中字段名一致的情况  
 		- resultMap：自定义映射，用于一对多或多对一或字段名和属性名不一致的情况  
@@ -432,6 +434,7 @@ User getUserByUsername(String username);
 ```
 ## 2、多个字面量类型的参数
 - 若mapper接口中的方法参数为多个时，此时MyBatis会自动将这些参数放在一个map集合中
+
 	1. 以arg0,arg1...为键，以参数为值；
 	2. 以param1,param2...为键，以参数为值；
 
@@ -553,6 +556,7 @@ User checkLoginByBean(User user);
 ```
 ## 5、使用@Param标识参数
 - 可以通过@Param注解标识mapper接口中的方法参数，此时，会将这些参数放在map集合中 
+
 	1. 以@Param注解的value属性值为键，以参数为值；
 	2. 以param1,param2...为键，以参数为值；
 
@@ -612,11 +616,13 @@ User checkLoginByAnnotation(@Param("username") String username, @Param("password
 > ```
 
 - 建议分成两种情况进行处理
+
 	1. 实体类类型的参数
 	
 	2. 使用@Param标识参数
-	
-	   
+
+
+​	   
 # 七、MyBatis的各种查询功能
 1. 如果查询出的数据只有一条，可以通过
 	1. 实体类对象接收
@@ -905,6 +911,7 @@ MyBatis查询结果赋值给实体类对象的本质是：通过查询列字段�
 
 ## 1、resultMap处理字段和属性的映射关系
 - > resultMap：设置自定义映射  
+
 	> - 属性：  
 	> 	- id：表示自定义映射的唯一标识，不能重复
 	> 	- type：查询的数据要映射的实体类的类型  
@@ -914,8 +921,9 @@ MyBatis查询结果赋值给实体类对象的本质是：通过查询列字段�
 	> 	- 子标签属性：  
 	> 		- property：设置映射关系中实体类中的属性名  
 	> 		- column：设置映射关系中表中的字段名
-	
-	
+
+
+​	
 
 ### 1.1、若字段名和实体类中的属性名不一致，则可以通过resultMap设置自定义映射
 
@@ -1286,6 +1294,7 @@ public void getEmpAndDeptByStepOne() {
 ```
 - 开启后，需要用到查询dept的时候才会调用相应的SQL语句![](Resources/延迟加载测试3.png)
 - fetchType：当开启了全局的延迟加载之后，可以通过该属性手动控制延迟加载的效果，fetchType="lazy(延迟加载)|eager(立即加载)"
+
 	```xml
 	<resultMap id="empAndDeptByStepResultMap" type="Emp">
 		<id property="eid" column="eid"></id>
@@ -1372,7 +1381,7 @@ public void getEmpAndDeptByStepOne() {
     </select>
 ```
 - ==注意：where标签不能去掉条件后多余的and/or==
-	
+
 	```xml
 	<!--这种用法是错误的，只能去掉条件前面的and/or，条件后面的不行-->
 	<if test="empName != null and empName !=''">
@@ -1675,6 +1684,7 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 
 - 二级缓存是SqlSessionFactory级别，通过同一个SqlSessionFactory创建的SqlSession查询的结果会被缓存；此后若再次执行相同的查询语句，结果就会从缓存中获取  
 - 二级缓存开启的条件
+
 	1. `在核心配置文件中，设置全局配置属性cacheEnabled="true"，默认为true，不需要设置`
 	2. `在映射文件中设置标签<cache />`
 	3. `二级缓存必须在SqlSession关闭或提交之后有效（如果开了二级缓存，数据先保存在sqlSession中仅在前面的sqlSession.close()或SqlSession.commit()后才会保存在二级缓存中！）`
@@ -1835,14 +1845,17 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 | diskPersistent | 否 | 在VM重启的时候是否启用磁盘保存EhCache中的数据，默认是false |
 | diskExpiryThreadIntervalSeconds | 否 | 磁盘缓存的清理线程运行间隔，默认是120秒。每个120s， 相应的线程会进行一次EhCache中数据的清理工作 |
 | memoryStoreEvictionPolicy | 否 | 当内存缓存达到最大，有新的element加入的时候， 移除缓存中element的策略。 默认是LRU（最近最少使用），可选的有LFU（最不常使用）和FIFO（先进先出 |
-# MyBatis的逆向工程
+# 十二、MyBatis的逆向工程
+
+逆向工程的本质就是代码生成器
+
 - 正向工程：先创建Java实体类，由框架负责根据实体类生成数据库表。Hibernate是支持正向工程的
 - 逆向工程：先创建数据库表，由框架负责根据数据库表，反向生成如下资源：  
 	- Java实体类  
 	- Mapper接口  
 	- Mapper映射文件
-## 创建逆向工程的步骤
-### 添加依赖和插件
+## 1、创建逆向工程的步骤
+### 1.1、添加依赖和插件
 ```xml
 <dependencies>
 	<!-- MyBatis核心依赖包 -->
@@ -1905,18 +1918,25 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 	</plugins>
 </build>
 ```
-### 创建MyBatis的核心配置文件
+### 1.2、创建MyBatis的核心配置文件 （和逆向工程没关系，但是连接数据库和增删改查会用到）
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
+<!-- 声明文件根标签-->
 <!DOCTYPE configuration
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
 <configuration>
+
     <properties resource="jdbc.properties"/>
+
+    <!-- 给类起别名，用于查询结果的返回类型   -->
     <typeAliases>
-        <package name=""/>
+        <package name="com.ly.mybatis.pojo"/>
     </typeAliases>
+
     <environments default="development">
+        <!-- 开发环境 -->
         <environment id="development">
             <transactionManager type="JDBC"/>
             <dataSource type="POOLED">
@@ -1926,14 +1946,17 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
                 <property name="password" value="${jdbc.password}"/>
             </dataSource>
         </environment>
+
     </environments>
+
+    <!--    引入映射文件，一个mapper文件对应一个接口-->
     <mappers>
-        <package name=""/>
+        <package name="com.ly.mybatis.mapper"/>
     </mappers>
 </configuration>
 ```
-### 创建逆向工程的配置文件
-- 文件名必须是：`generatorConfig.xml`
+### 1.3、创建逆向工程的配置文件（注意targetRuntime属性）
+- ==文件名必须是：`generatorConfig.xml`==
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE generatorConfiguration
@@ -1942,8 +1965,8 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 <generatorConfiguration>
     <!--
     targetRuntime: 执行生成的逆向工程的版本
-    MyBatis3Simple: 生成基本的CRUD（清新简洁版）
-    MyBatis3: 生成带条件的CRUD（奢华尊享版）
+    MyBatis3Simple: 生成基本的CRUD（清新简洁版）【增删改，查询所有，根据id查询共5个操作】
+    MyBatis3: 生成带条件的CRUD（奢华尊享版） ****
     -->
     <context id="DB2Tables" targetRuntime="MyBatis3Simple">
         <!-- 数据库的连接信息 -->
@@ -1952,37 +1975,44 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
                         userId="root"
                         password="123456">
         </jdbcConnection>
-        <!-- javaBean的生成策略-->
-        <javaModelGenerator targetPackage="com.atguigu.mybatis.pojo" targetProject=".\src\main\java">
-            <property name="enableSubPackages" value="true" />
-            <property name="trimStrings" value="true" />
+
+        <!-- javaBean的生成策略  .表示工程根目录即src的父目录-->
+        <javaModelGenerator targetPackage="com.ly.mybatis.pojo" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true" /> <!-- 是否遵循Java中.表示目录的意思，否则.就是名字-->
+            <property name="trimStrings" value="true" /> <!-- 去掉数据库字段名前后的空格(生成属性)-->
         </javaModelGenerator>
-        <!-- SQL映射文件的生成策略 -->
-        <sqlMapGenerator targetPackage="com.atguigu.mybatis.mapper"
+
+        <!-- SQL映射文件Mapper.xml文件的生成策略 -->
+        <sqlMapGenerator targetPackage="com.ly.mybatis.mapper"
                          targetProject=".\src\main\resources">
             <property name="enableSubPackages" value="true" />
         </sqlMapGenerator>
-        <!-- Mapper接口的生成策略 -->
+
+        <!-- Mapper接口mapper.java的生成策略 -->
         <javaClientGenerator type="XMLMAPPER"
-                             targetPackage="com.atguigu.mybatis.mapper" targetProject=".\src\main\java">
+                             targetPackage="com.ly.mybatis.mapper" targetProject=".\src\main\java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
+
         <!-- 逆向分析的表 -->
-        <!-- tableName设置为*号，可以对应所有表，此时不写domainObjectName -->
-        <!-- domainObjectName属性指定生成出来的实体类的类名 -->
+        <!-- tableName设置为*号，可以对应所有表，此时不写domainObjectName  即：
+            <table tableName=* />
+        -->
+        <!-- domainObjectName属性指定生成出来的实体类的类名，mapper接口和文件会自动加上mapper不需要自己加 -->
         <table tableName="t_emp" domainObjectName="Emp"/>
         <table tableName="t_dept" domainObjectName="Dept"/>
     </context>
+
 </generatorConfiguration>
 ```
-### 执行MBG插件的generate目标
+### 1.4、执行MBG插件的generate目标
 - ![](Resources/执行MBG插件的generate目标.png)
 - 如果出现报错：`Exception getting JDBC Driver`，可能是pom.xml中，数据库驱动配置错误
 	- dependency中的驱动![](Resources/dependency中的驱动.png)
 	- mybatis-generator-maven-plugin插件中的驱动![](Resources/插件中的驱动.png)
 	- 两者的驱动版本应该相同
 - 执行结果![](Resources/逆向执行结果.png)
-## QBC
+## 2、QBC （query by criteria 根据条件查询）
 ### 查询
 - `selectByExample`：按条件查询，需要传入一个example对象或者null；如果传入一个null，则表示没有条件，也就是查询所有数据
 - `example.createCriteria().xxx`：创建条件对象，通过andXXX方法为SQL添加查询添加，每个条件之间是and关系
@@ -2012,9 +2042,12 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 - `updateByPrimaryKeySelective()`：通过主键进行选择性数据修改，如果某个值为null，则不修改这个字段
 	- `mapper.updateByPrimaryKeySelective(new Emp(2,"admin2",22,null,"456@qq.com",3));`
 	- ![](Resources/增删改测试结果2.png)
-# 分页插件
-## 分页插件使用步骤
-### 添加依赖
+# 十三、分页插件
+
+只需要使用分页插件即可完成分页，不需要写sql
+
+## 1、分页插件使用步骤
+### 1.1、添加依赖
 ```xml
 <!-- https://mvnrepository.com/artifact/com.github.pagehelper/pagehelper -->
 <dependency>
@@ -2023,76 +2056,146 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 	<version>5.2.0</version>
 </dependency>
 ```
-### 配置分页插件
-- 在MyBatis的核心配置文件（mybatis-config.xml）中配置插件
-- ![](Resources/配置分页插件.png)
+### 1.2、配置分页插件
+在MyBatis的核心配置文件（mybatis-config.xml）中配置插件
+
 ```xml
 <plugins>
 	<!--设置分页插件-->
 	<plugin interceptor="com.github.pagehelper.PageInterceptor"></plugin>
 </plugins>
 ```
-## 分页插件的使用
-### 开启分页功能
+## 2、分页插件的使用
+### 2.1、开启分页功能
 - 在查询功能之前使用`PageHelper.startPage(int pageNum, int pageSize)`开启分页功能
 	- pageNum：当前页的页码  
 	- pageSize：每页显示的条数
 ```java
-@Test
-public void testPageHelper() throws IOException {
-	InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
-	SqlSessionFactoryBuilder sqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
-	SqlSessionFactory sqlSessionFactory = sqlSessionFactoryBuilder.build(is);
-	SqlSession sqlSession = sqlSessionFactory.openSession(true);
-	EmpMapper mapper = sqlSession.getMapper(EmpMapper.class);
-	//访问第一页，每页四条数据
-	PageHelper.startPage(1,4);
-	List<Emp> emps = mapper.selectByExample(null);
-	emps.forEach(System.out::println);
-}
+/**
+     * select * from table limit index,pageSize;
+     *         index:当前页起始序号，（实际index+1）  ***注意不是根据id，而是查询到的所有结果的顺序排序的
+     *         pageSize：当前页显示的数量
+     *         pageNum：表示当前页的页码
+     *         index = (pageNum - 1) * pageSize
+     * sql分页使用limit关键字
+     * @throws IOException 文件流异常
+     */
+
+    @Test
+    public void testPageInterceptor() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        EmpMapper empMapper = sqlSession.getMapper(EmpMapper.class);
+        //分页查询 查询前开启分页功能 参数
+        /**
+         *  PageHelper.startPage(pageNUm,pageSize);
+         * pageNUm：当前页码 （输入0就不显示）
+         * pageSize：每页显示的数据
+         */
+        PageHelper.startPage(1,10);
+        List<Emp> emps = empMapper.selectByExample(null);
+        emps.forEach(emp -> System.out.println(emp));
+
+
+    }
 ```
 
 ![](Resources/分页测试结果.png)
-### 分页相关数据
-#### 方法一：直接输出
+### 2.2、分页相关数据
+#### 方法一：直接输出 （`Page<Object> page`）
 ```java
-@Test
-public void testPageHelper() throws IOException {
-	InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
-	SqlSessionFactoryBuilder sqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
-	SqlSessionFactory sqlSessionFactory = sqlSessionFactoryBuilder.build(is);
-	SqlSession sqlSession = sqlSessionFactory.openSession(true);
-	EmpMapper mapper = sqlSession.getMapper(EmpMapper.class);
-	//访问第一页，每页四条数据
-	Page<Object> page = PageHelper.startPage(1, 4);
-	List<Emp> emps = mapper.selectByExample(null);
-	//在查询到List集合后，打印分页数据
-	System.out.println(page);
-}
+    /**
+     * select * from table limit index,pageSize;
+     *         index:当前页起始序号，（实际index+1）  ***注意不是根据id，而是查询到的所有结果的顺序排序的
+     *         pageSize：当前页显示的数量
+     *         pageNum：表示当前页的页码
+     *         index = (pageNum - 1) * pageSize
+     * sql分页使用limit关键字
+     * @throws IOException 文件流异常
+     */
+
+    @Test
+    public void testPageInterceptor() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        EmpMapper empMapper = sqlSession.getMapper(EmpMapper.class);
+        //分页查询 查询前开启分页功能 参数
+        /**
+         * pageNUm：当前页码 （输入0就不显示）
+         * pageSize：每页显示的数据
+         */
+        Page<Object> page = PageHelper.startPage(2, 10);
+        System.out.println(page);
+        List<Emp> emps = empMapper.selectByExample(null);
+        emps.forEach(emp -> System.out.println(emp));
+
+
+    }
 ```
 - 分页相关数据：
+
 	```
-	Page{count=true, pageNum=1, pageSize=4, startRow=0, endRow=4, total=8, pages=2, reasonable=false, pageSizeZero=false}[Emp{eid=1, empName='admin', age=22, sex='男', email='456@qq.com', did=3}, Emp{eid=2, empName='admin2', age=22, sex='男', email='456@qq.com', did=3}, Emp{eid=3, empName='王五', age=12, sex='女', email='123@qq.com', did=3}, Emp{eid=4, empName='赵六', age=32, sex='男', email='123@qq.com', did=1}]
+	Page{count=true, pageNum=2, pageSize=10, startRow=10, endRow=20, total=0, pages=0, reasonable=null, pageSizeZero=null}[]
+	DEBUG 06-11 11:07:15,271 Cache Hit Ratio [SQL_CACHE]: 0.0 (LoggingCache.java:60) 
+	DEBUG 06-11 11:07:15,361 ==>  Preparing: SELECT count(0) FROM t_emp (BaseJdbcLogger.java:137) 
+	DEBUG 06-11 11:07:15,415 ==> Parameters:  (BaseJdbcLogger.java:137) 
+	DEBUG 06-11 11:07:15,473 <==      Total: 1 (BaseJdbcLogger.java:137) 
+	DEBUG 06-11 11:07:15,478 ==>  Preparing: select eid, emp_name, age, sex, email, did from t_emp LIMIT ?, ? (BaseJdbcLogger.java:137) 
+	DEBUG 06-11 11:07:15,479 ==> Parameters: 10(Long), 10(Integer) (BaseJdbcLogger.java:137) 
+	DEBUG 06-11 11:07:15,486 <==      Total: 10 (BaseJdbcLogger.java:137) 
+	Emp{eid=30, empName='王五31', age=30, sex='男', email='ww@test.com', did=2}
+	Emp{eid=31, empName='赵六41', age=27, sex='男', email='zl@test.com', did=3}
+	Emp{eid=32, empName='admin51', age=22, sex='女', email='admin@admin.com', did=1}
+	Emp{eid=33, empName='李四61', age=28, sex='女', email='ls@test.com', did=1}
+	Emp{eid=34, empName='王五71', age=30, sex='男', email='ww@test.com', did=2}
+	Emp{eid=35, empName='赵六81', age=27, sex='男', email='zl@test.com', did=3}
+	Emp{eid=36, empName='admin13', age=22, sex='女', email='admin@admin.com', did=1}
+	Emp{eid=37, empName='李四23', age=22, sex='女', email='admin@admin.com', did=1}
+	Emp{eid=38, empName='王五33', age=30, sex='男', email='ww@test.com', did=2}
+	Emp{eid=39, empName='赵六43', age=27, sex='男', email='zl@test.com', did=3}
 	```
-#### 方法二使用PageInfo
+#### 方法二、使用PageInfo
 - 在查询获取list集合之后，使用`PageInfo<T> pageInfo = new PageInfo<>(List<T> list, intnavigatePages)`获取分页相关数据
 	- list：分页之后的数据  
 	- navigatePages：导航分页的页码数
 ```java
-@Test
-public void testPageHelper() throws IOException {
-	InputStream is = Resources.getResourceAsStream("mybatis-config.xml");
-	SqlSessionFactoryBuilder sqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
-	SqlSessionFactory sqlSessionFactory = sqlSessionFactoryBuilder.build(is);
-	SqlSession sqlSession = sqlSessionFactory.openSession(true);
-	EmpMapper mapper = sqlSession.getMapper(EmpMapper.class);
-	PageHelper.startPage(1, 4);
-	List<Emp> emps = mapper.selectByExample(null);
-	PageInfo<Emp> page = new PageInfo<>(emps,5);
-	System.out.println(page);
-}
+      /**
+     * select * from table limit index,pageSize;
+     *         index:当前页起始序号，（实际index+1）  ***注意不是根据id，而是查询到的所有结果的顺序排序的
+     *         pageSize：当前页显示的数量
+     *         pageNum：表示当前页的页码
+     *         index = (pageNum - 1) * pageSize
+     * sql分页使用limit关键字
+     * @throws IOException 文件流异常
+     */
+
+    @Test
+    public void testPageInterceptor() throws IOException {
+        SqlSession sqlSession = new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis-config.xml")).openSession();
+        EmpMapper empMapper = sqlSession.getMapper(EmpMapper.class);
+        //分页查询 查询前开启分页功能 参数
+        /**
+         * pageNUm：当前页码 （输入0就不显示）
+         * pageSize：每页显示的数据
+         */
+        //Page<Object> page = PageHelper.startPage(2, 10);
+        PageHelper.startPage(2, 10);
+        //System.out.println(page);
+        List<Emp> emps = empMapper.selectByExample(null);
+        /**
+         * PageInfo<Emp> empPageInfo = new PageInfo<>(emps,1);
+         * 参数1：查询到的分页数据集合
+         * 参数2：前端展示导航页数（1页就是十个数据）
+         *
+         */
+        PageInfo<Emp> empPageInfo = new PageInfo<>(emps,5);
+        System.out.println(empPageInfo);
+
+        //emps.forEach(emp -> System.out.println(emp));
+
+
+    }
 ```
 - 分页相关数据：
+
 	```
 	PageInfo{
 	pageNum=1, pageSize=4, size=4, startRow=1, endRow=4, total=8, pages=2, 
@@ -2103,7 +2206,8 @@ public void testPageHelper() throws IOException {
 #### 常用数据：
 - pageNum：当前页的页码  
 - pageSize：每页显示的条数  
-- size：当前页显示的真实条数  
+- size：当前页显示的真实条数 
+- list：就是上面的page集合 
 - total：总记录数  
 - pages：总页数  
 - prePage：上一页的页码  
@@ -2111,4 +2215,4 @@ public void testPageHelper() throws IOException {
 - isFirstPage/isLastPage：是否为第一页/最后一页  
 - hasPreviousPage/hasNextPage：是否存在上一页/下一页  
 - navigatePages：导航分页的页码数  
-- navigatepageNums：导航分页的页码，\[1,2,3,4,5]
+- navigatepageNums：导航分页的页码，\[1,2,3,4,5] （默认就是页面显示5页，当前页前后各两页）
