@@ -1,5 +1,7 @@
 # Log4j两种配置文件格式：
 
+*参考链接：[最详细的Log4J使用教程_harderczw的博客-CSDN博客_log4j使用](https://blog.csdn.net/u013870094/article/details/79518028)*
+
 ## 1、Properties类型配置文件（Jav特性文件即：键=值）：
 
 实例：

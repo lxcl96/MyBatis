@@ -1,37 +1,47 @@
+[TOC]
+
 # 一、Mybatis简介
-## MyBatis历史
+## 1.1、MyBatis历史
 -    MyBatis最初是Apache的一个开源项目iBatis, 2010年6月这个项目由Apache Software Foundation迁移到了Google Code。随着开发团队转投Google Code旗下，iBatis3.x正式更名为MyBatis。代码于2013年11月迁移到Github
 - iBatis一词来源于“internet”和“abatis”的组合，是一个基于Java的持久层框架。iBatis提供的持久层框架包括SQL Maps和Data Access Objects（DAO）
-## MyBatis特性
-1. MyBatis 是支持定制化 SQL、存储过程以及高级映射的优秀的持久层框架
-2. MyBatis 避免了几乎所有的 JDBC 代码和手动设置参数以及获取结果集
-3. MyBatis可以使用简单的XML或注解用于配置和原始映射，将接口和Java的POJO（Plain Old Java Objects，普通的Java对象）映射成数据库中的记录
-4. MyBatis 是一个 半自动的ORM（Object Relation Mapping）框架
-## MyBatis下载
+## 1.2、MyBatis特性
+1. `MyBatis 是支持定制化 SQL、存储过程以及高级映射(resultType,resultMap)的优秀的持久层框架`
+2. `MyBatis 避免了几乎所有的 JDBC 代码和手动设置参数以及获取结果集`
+3. `MyBatis可以使用简单的XML或注解用于配置和原始映射，将接口和Java的POJO（Plain Old Java Objects，普通的Java对象）映射成数据库中的记录`
+4. `MyBatis 是一个 半自动的ORM（Object Relation Mapping）框架`
+## 1.3、MyBatis下载
 - [MyBatis下载地址](https://github.com/mybatis/mybatis-3)
-- ![](Resources/MyBatis下载.png)
-## 和其它持久化层技术对比
-- JDBC  
-	- SQL 夹杂在Java代码中耦合度高，导致硬编码内伤  
-	- 维护不易且实际开发需求中 SQL 有变化，频繁修改的情况多见  
-	- 代码冗长，开发效率低
-- Hibernate 和 JPA
-	- 操作简便，开发效率高  
-	- 程序中的长难复杂 SQL 需要绕过框架  
-	- 内部自动生产的 SQL，不容易做特殊优化  
-	- 基于全映射的全自动框架，大量字段的 POJO 进行部分映射时比较困难。  
-	- 反射操作太多，导致数据库性能下降
-- MyBatis
-	- 轻量级，性能出色  
-	- SQL 和 Java 编码分开，功能边界清晰。Java代码专注业务、SQL语句专注数据  
-	- 开发效率稍逊于HIbernate，但是完全能够接受
+
+![](Resources/MyBatis下载.png)
+
+## 1.4、和其它持久化层技术对比
+***①：JDBC***  
+
+- SQL 夹杂在Java代码中耦合度高，导致硬编码内伤  
+- 维护不易且实际开发需求中 SQL 有变化，频繁修改的情况多见  
+- 代码冗长，开发效率低
+
+***②：Hibernate 和 JPA***
+
+- 操作简便，开发效率高  
+- 程序中的长难复杂 SQL 需要绕过框架  
+- 内部自动生产的 SQL，不容易做特殊优化  
+- 基于全映射的全自动框架，大量字段的 POJO 进行部分映射时比较困难。  
+- 反射操作太多，导致数据库性能下降
+
+***③：MyBatis***
+
+- 轻量级，性能出色  
+- SQL 和 Java 编码分开，功能边界清晰。Java代码专注业务、SQL语句专注数据  
+- 开发效率稍逊于HIbernate，但是完全能够接受
+
 # 二、搭建MyBatis
-## 开发环境
+## 1、开发环境
 - IDE：idea 2019.2  
 - 构建工具：maven 3.5.4  
 - MySQL版本：MySQL 5.7  
 - MyBatis版本：MyBatis 3.5.7
-## 创建maven工程
+## 2、创建maven工程
 - 打包方式：jar
 - 引入依赖
 
@@ -58,7 +68,7 @@
 		</dependency>
 </dependencies>
 ```
-## 创建MyBatis的核心配置文件
+## 3、创建MyBatis的核心配置文件
 >习惯上命名为`mybatis-config.xml`，这个文件名仅仅只是建议，并非强制要求。将来整合Spring之后，这个配置文件可以省略，所以大家操作时可以直接复制、粘贴。
 >核心配置文件主要用于配置连接数据库的环境以及MyBatis的全局配置信息
 >核心配置文件存放的位置是src/main/resources目录下
@@ -87,7 +97,7 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 </configuration>
 ```
 ## 创建mapper接口
->MyBatis中的mapper接口相当于以前的dao。但是区别在于，mapper仅仅是接口，我们不需要提供实现类
+>MyBatis中的mapper接口相当于以前的dao。但是区别在于，mapper仅仅是接口，我们不需要提供实现类，可以理解为MyBatis会根据接口自动生成实现类。
 ```java
 package com.ly.mybatis.mapper;
 
@@ -138,10 +148,11 @@ public interface UserMapper {
 
 ```
 ## 创建MyBatis的映射文件
-- 相关概念：ORM（Object Relationship Mapping）对象关系映射。  
-	- 对象：Java的实体类对象  
-	- 关系：关系型数据库  
-	- 映射：二者之间的对应关系
+***相关概念：ORM（Object Relationship Mapping）对象关系映射。*** 
+
+- 对象：Java的实体类对象  
+- 关系：关系型数据库  
+- 映射：二者之间的对应关系
 
 | Java概念 | 数据库概念 |
 | --- | --- |
@@ -149,15 +160,17 @@ public interface UserMapper {
 | 属性 | 字段/列 |
 | 对象 | 记录/行 |
 
-- 映射文件的命名规则
-	- 表所对应的实体类的类名+Mapper.xml
-	- 例如：表t_user，映射的实体类为User，所对应的映射文件为UserMapper.xml 
-	- 因此一个映射文件对应一个实体类，对应一张表的操作
-	- MyBatis映射文件用于编写SQL，访问以及操作表中的数据
-	- MyBatis映射文件存放的位置是src/main/resources/mappers目录下
+***映射文件的命名规则***
+
+- 表所对应的实体类的类名+Mapper.xml
+  - 例如：表t_user，映射的实体类为User，所对应的映射文件为UserMapper.xml 
+  - 因此一个映射文件对应一个实体类，对应一张表的操作
+  - MyBatis映射文件用于编写SQL，访问以及操作表中的数据
+  - MyBatis映射文件存放的位置是src/main/resources/mappers目录下
 - MyBatis中可以面向接口操作数据，要保证两个一致
-	- mapper接口的全类名和映射文件的命名空间（namespace）保持一致
-	- mapper接口中方法的方法名和映射文件中编写SQL的标签的id属性保持一致
+- mapper接口的全类名和映射文件的命名空间（namespace）保持一致
+- mapper接口中方法的方法名和映射文件中编写SQL的标签的id属性保持一致
+
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
@@ -165,7 +178,7 @@ public interface UserMapper {
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--指定指定实现接口 即：接口的全类名 必须为全类名，不能省略，不要因为按包导入就不一样了，又不是起别名-->
-<mapper namespace="ParameterMapper">
+<mapper namespace="com.ly.mybatis.mapper.ParameterMapper">
 <!-- id为接口的某个函数名，一一对应-->
     <insert id="insertUser" >
         insert t_user values (null ,'admin','123456',23,'男','123456@qq.com');
@@ -197,7 +210,7 @@ public interface UserMapper {
 
 </mapper>
 ```
-## 通过junit测试功能
+## 4、通过junit测试功能
 - SqlSession：代表Java程序和数据库之间的会话。（HttpSession是Java程序和浏览器之间的会话）
 - SqlSessionFactory：是“生产”SqlSession的“工厂”
 - 工厂模式：如果创建某一个对象，使用的过程基本固定，那么我们就可以把创建这个对象的相关代码封装到一个“工厂类”中，以后都使用这个工厂类来“生产”我们需要的对象
@@ -222,7 +235,7 @@ public interface UserMapper {
     }
 ```
 - 此时需要手动提交事务，如果要自动提交事务，则在获取sqlSession对象时，使用`SqlSession sqlSession = sqlSessionFactory.openSession(true);`，传入一个Boolean类型的参数，值为true，这样就可以自动提交
-## 加入log4j日志功能
+## 5、加入log4j日志功能
 1. 加入依赖
 	```xml
 	<!-- log4j日志 -->
@@ -793,13 +806,13 @@ List<User> getUserByLike(@Param("username") String username);
 ```xml
 <!--List<User> getUserByLike(@Param("username") String username);-->
 <select id="getUserByLike" resultType="User">
-	<!--select * from t_user where username like '%${mohu}%'-->  
+	<!--select * from t_user where username like '%${username}%'-->  
    <!-- mysql的字符串函数 contact -->
-	<!--select * from t_user where username like concat('%',#{mohu},'%')-->  
-	select * from t_user where username like "%"#{mohu}"%"
+	<!--select * from t_user where username like concat('%',#{username},'%')-->  
+	select * from t_user where username like "%"#{username}"%"
 </select>
 ```
-- 其中`select * from t_user where username like "%"#{mohu}"%"`是最常用的
+- 其中`select * from t_user where username like "%"#{username}"%"`是最常用的
 ## 2、批量删除
 - 只能使用\${}，如果使用#{}，则解析后的sql语句为`delete from t_user where id in ('1,2,3')`，这样是将`1,2,3`看做是一个整体，只有id为`1,2,3`的数据会被删除。正确的语句应该是`delete from t_user where id in (1,2,3)`，或者`delete from t_user where id in ('1','2','3')`
 ```java
@@ -845,15 +858,19 @@ List<User> getUserByTable(@Param("tableName") String tableName);
 </select>
 ```
 ## 4、添加功能获取自增的主键
-- 使用场景
-	- t_clazz(clazz_id,clazz_name)  
-	- t_student(student_id,student_name,clazz_id)  
-	1. 添加班级信息  
-	2. 获取新添加的班级的id  
-	3. 为班级分配学生，即将某学的班级id修改为新添加的班级的id
-- 在mapper.xml中设置两个属性
-	- useGeneratedKeys：设置使用自增的主键  
-	* keyProperty：因为增删改有统一的返回值是受影响的行数，因此只能将获取的自增的主键放在传输的参数user对象的某个属性中
+使用场景
+
+- t_clazz(clazz_id,clazz_name)  
+- t_student(student_id,student_name,clazz_id)  
+  1. 添加班级信息  
+  2. 获取新添加的班级的id  
+  3. 为班级分配学生，即将某学的班级id修改为新添加的班级的id
+
+在mapper.xml中设置两个属性
+
+- useGeneratedKeys：设置使用自增的主键  
+- keyProperty：因为增删改有统一的返回值是受影响的行数，因此只能将获取的自增的主键放在传输的参数user对象的某个属性中
+
 ```java
    /**
      * 新增user信息，同时给user分配新增班级的主键
@@ -969,7 +986,9 @@ MyBatis查询结果赋值给实体类对象的本质是：通过查询列字段�
 </select>
 ```
 
-#### 	1.2.2、可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。[核心配置文件详解](#核心配置文件详解)
+#### 	1.2.2、可以在MyBatis的核心配置文件中的`setting`标签中，设置一个全局配置信息mapUnderscoreToCamelCase，可以在查询表中数据时，自动将_类型的字段名转换为驼峰，例如：字段名user_name，设置了mapUnderscoreToCamelCase，此时字段名就会转换为userName。
+
+#### 	[核心配置文件详解](#核心配置文件详解)
 
 ```xml
 //mybatis-config.xml 配置文件
@@ -1034,7 +1053,7 @@ public class Employee {
 ```
 ### 2.2、使用association处理映射关系，相当于内部bean
 - association：处理多对一的映射关系
-- property：需要处理多对的映射关系的属性名
+- property：需要处理多对的映射关系实体类Bean的属性名
 - javaType：该属性的类型
 ```xml
     <!-- 解决多对一映射除磷：
@@ -1323,10 +1342,10 @@ public void getEmpAndDeptByStepOne() {
 ## 1、if
 - if标签可通过test属性（即传递过来的数据）的表达式进行判断，若表达式的结果为true，则标签中的内容会执行；反之标签中的内容不会执行
 - 在where后面添加一个恒成立条件`1=1`
-	- 这个恒成立条件并不会影响查询的结果
-	- 这个`1=1`可以用来拼接`and`语句，例如：当empName为null时
-		- 如果不加上恒成立条件，则SQL语句为`select * from t_emp where and age = ? and sex = ? and email = ?`，此时`where`会与`and`连用，SQL语句会报错
-		- 如果加上一个恒成立条件，则SQL语句为`select * from t_emp where 1= 1 and age = ? and sex = ? and email = ?`，此时不报错
+- 这个恒成立条件并不会影响查询的结果
+- 这个`1=1`可以用来拼接`and`语句，例如：当empName为null时
+- 如果不加上恒成立条件，则SQL语句为`select * from t_emp where and age = ? and sex = ? and email = ?`，此时`where`会与`and`连用，SQL语句会报错
+- 如果加上一个恒成立条件，则SQL语句为`select * from t_emp where 1= 1 and age = ? and sex = ? and email = ?`，此时不报错
 ```xml
     <!--
      * 多条件查询:员工姓名，性别，年龄，电子邮箱
@@ -1394,10 +1413,10 @@ public void getEmpAndDeptByStepOne() {
 ## 3、trim
 - trim用于去掉或添加标签中的内容  
 - 常用属性
-	- prefix：在trim标签中的内容的前面添加某些内容  
-	- suffix：在trim标签中的内容的后面添加某些内容 
-	- prefixOverrides：在trim标签中的内容的前面去掉某些内容  
-	- suffixOverrides：在trim标签中的内容的后面去掉某些内容
+- prefix：在trim标签中的内容的前面添加某些内容  
+- suffix：在trim标签中的内容的后面添加某些内容 
+- prefixOverrides：在trim标签中的内容的前面去掉某些内容  
+- suffixOverrides：在trim标签中的内容的后面去掉某些内容
 - 若trim中的标签都不满足条件，则trim标签没有任何效果，也就是只剩下`select * from t_emp`
 ```xml
     <!--
@@ -1431,7 +1450,7 @@ public void getEmpAndDeptByStepOne() {
     </select>
 ```
 ## 4、choose、when、otherwise 一组标签
-- `choose、when、otherwise`相当于`if...else if..else ` 一一对应！
+- `choose、when、otherwise`相当于`switch...default ` 一一对应！
 - when至少要有一个，otherwise至多只有一个
 ```xml
     <!--
@@ -1441,22 +1460,22 @@ public void getEmpAndDeptByStepOne() {
     <select id="getEmployeeByChoose" resultType="Employee">
         select * from t_emp
         <where>
-            <!--choose是父标签 ，一组choose 就表示完整的if..else if...else-->
+            <!--choose是父标签 ，一组choose 就表示完整的 switch...default-->
             <choose>
                 <!-- 有一个满足条件，其它的就不会执行了 。所以不用加and-->
-                <when test="empName != null and empName != ''"> <!-- if-->
+                <when test="empName != null and empName != ''"> <!-- switch-->
                     emp_name = #{empName}
                 </when>
-                <when test="sex != null and sex !=' '">  <!-- else if-->
+                <when test="sex != null and sex !=' '">  <!-- switch-->
                     sex = #{sex}
                 </when>
-                <when test="age != null and age !=''"> <!-- else if-->
+                <when test="age != null and age !=''"> <!-- switch-->
                     age = #{age}
                 </when>
-                <when test="email != null and email !=''"> <!-- else if-->
+                <when test="email != null and email !=''"> <!-- switch-->
                     email = #{email}
                 </when>
-                <otherwise> <!-- else-->
+                <otherwise> <!-- default-->
                     did = 1
                 </otherwise>
             </choose>
@@ -1479,7 +1498,7 @@ public void getEmpAndDeptByStepOne() {
     }
 ```
 ![](Resources/choose测试结果.png)
-- 相当于`if a else if b else if c else d`，只会执行其中一个
+- 相当于`switch...default`，只会执行其中一个
 
 ## 5、foreach
 ### 5.1、属性：  
@@ -1696,7 +1715,7 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 + `type属性：指定使用的缓存类型，不写默认是MyBatis的SqlSessionFactory`
 
   ```xml
-  //配置第三次缓存插件的全类名
+  //配置第三方缓存插件的全类名
   <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
   ```
 
@@ -1851,9 +1870,9 @@ INSERT INTO t_emp VALUES ('1', '张三', '32', '男', 'zs@test.com', '1'),('2', 
 
 - 正向工程：先创建Java实体类，由框架负责根据实体类生成数据库表。Hibernate是支持正向工程的
 - 逆向工程：先创建数据库表，由框架负责根据数据库表，反向生成如下资源：  
-	- Java实体类  
-	- Mapper接口  
-	- Mapper映射文件
+- Java实体类  
+- Mapper接口  
+- Mapper映射文件
 ## 1、创建逆向工程的步骤
 ### 1.1、添加依赖和插件
 ```xml
