@@ -355,9 +355,10 @@ properties、settings、typeAliases、typeHandlers、objectFactory、objectWrapp
 # 五、MyBatis的增删改查
 1. 添加
 	```xml
-	<!--int insertUser();-->
+	<!--int insertUser(User user);-->
 	<insert id="insertUser">
-		insert into t_user values(null,'admin','123456',23,'男','12345@qq.com')
+	    <!-- bean其实就是一个map，所以可以直接取其属性-->
+		insert into t_user values(null,#{userName},#{password},#{age},#{sex},#{email})
 	</insert>
 	```
 2. 删除
